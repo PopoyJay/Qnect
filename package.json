@@ -18,6 +18,17 @@
   },
   "homepage": "https://github.com/PopoyJay/Qnect#readme",
   "dependencies": {
-    "express": "^4.21.2"
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "pg": "^8.14.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.6"
+  },
+  "devDependencies": {
+    "sequelize-cli": "^6.6.2"
   }
 }
