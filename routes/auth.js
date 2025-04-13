@@ -1,48 +1,26 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const passport = require("passport");
-const { User } = require("../models"); // Import User model
-require("dotenv").config();
+// Password Hashing During User Registration (with Explanation)
+const bcrypt = require('bcryptjs'); // Library for hashing passwords securely
+const { User } = require('../models'); // Sequelize User model (adjust path if needed)
 
-const router = express.Router();
+// Hash the user's plain-text password
+const hashedPassword = await bcrypt.hash(req.body.password, 12);
 
-// 🟢 Register User
-router.post("/register", async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
+// Why bcrypt.hash(password, 12)?
+    // req.body.password: This is the plain-text password from the user.
+    // 12: This is the salt rounds – it defines how complex the hash is.
+        // More rounds = more secure (but slightly slower).
+        // 12 is a common, safe choice that balances speed and security.
 
-    // Check if user exists
-    let user = await User.findOne({ where: { email } });
-    if (user) return res.status(400).json({ message: "Email already in use" });
-
-    // Create new user
-    user = await User.create({ username, email, password });
-
-    res.status(201).json({ message: "User registered successfully!" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+// Save the new user to the database with the hashed password
+await User.create({
+  username: req.body.username,  // user's chosen username
+  email: req.body.email,        // user's email
+  password: hashedPassword,     // hashed version, never store plain-text passwords
 });
 
-// 🟢 Login User
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+// PURPOSE:
+    // It's used to hash the user's password before saving it to your database. This is a best practice in authentication systems to protect user data.
 
-    if (!user) return res.status(400).json({ message: "User not found" });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
-    // Generate JWT Token
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-
-    res.json({ token });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-module.exports = router;
+// Why hashing is important:
+    // If your database is ever compromised, the attacker can't see the real passwords.
+    // You never store passwords in plain text — only hashed versions.
