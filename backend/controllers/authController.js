@@ -5,6 +5,38 @@ const jwt = require('jsonwebtoken');        // Library to generate & verify JWT 
 const bcrypt = require('bcrypt');           // Library to compare hashed passwords
 const { User } = require('../models');      // Sequelize User model
 
+// Registration Contoller
+const register = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+
+    // Check for required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already in use.' });
+    }
+
+    // 🔐 Hash the password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Save user
+    await User.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({ message: 'User registered successfully.' });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Something went wrong during registration.' });
+  }
+};
 // Login Controller Function
 const login = async (req, res) => {
   // Step 1: Extract email and password from request body
@@ -57,4 +89,4 @@ const login = async (req, res) => {
 };
 
 // Export the login function so it can be used in routes
-module.exports = { login };
+module.exports = { login, register };

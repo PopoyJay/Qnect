@@ -29,9 +29,25 @@ await User.create({
 // In routes/auth.js
 
 const express = require('express');
+const passport = require('passport');
+const { login, register } = require('../controllers/authController'); // Optional: Add register controller
 const router = express.Router();
-const { login } = require('../controllers/authController');
 
+// Google OAuth Route
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Google OAuth Callback Route
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/dashboard');
+  }
+);
+
+// Regular login route (for JWT login)
 router.post('/login', login);
+
+// Optional: Register route
+router.post('/register', register);
 
 module.exports = router;

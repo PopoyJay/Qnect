@@ -496,13 +496,16 @@ passport.deserializeUser(async (id, done) => {
 
   # 3.3 Route 
   // In routes/auth.js
-  router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-  router.get('/google/callback',
+// Google OAuth Route
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Google OAuth Callback Route
+router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
     res.redirect('/dashboard');
-  });
+  }
 
 
 
