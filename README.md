@@ -417,4 +417,20 @@ JWT_SECRET=my_super_secret_key_123
 // In server.js - add this to on top of the code 
 require('dotenv').config();  // Load environment variables from .env file first
   
+  # 2.3 Express Rate Limiter
+// In server.js
+
+// Import rate limiter middleware
+const rateLimit = require('express-rate-limit');
+
+// Add Rate Limiter Middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,     // 15 minutes
+  max: 100,                     // Limit each IP to 100 requests per windowMs
+  message: '⚠️ Too many requests from this IP, please try again after 15 minutes.'
+});
+
+// Apply the rate limiter to **all API routes starting with /api/**
+app.use('/api/', limiter);
+// You can change '/api/' to '/' if you want it to apply to everything
 
