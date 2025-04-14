@@ -516,22 +516,155 @@ router.post('/register', register);
 
 module.exports = router;
 
-# 4. INPUT VALIDATION & SANITIZATION (EXPRESS-VALIDATION
+# 4. INPUT VALIDATION & SANITIZATION (EXPRESS-VALIDATION) (Updated Codes)
 // In routes/auth.js
 
-  const { body, validationResult } = require('express-validator');
+// routes/auth.js
+const express = require('express');
+const passport = require('passport');
+const { body } = require('express-validator');
+const { login, register } = require('../controllers/authController');
 
-  router.post('/register',
-    body('email').isEmail(),
-    body('password').isLength({ min: 6 }),
-    (req, res) => {
-     const errors = validationResult(req);
-     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-     // Proceed with registration
-   }
-  );
+const router = express.Router();
+
+// Google OAuth Routes
+// Route to initiate Google OAuth authentication
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+// Google OAuth callback route, which is triggered after successful authentication with Google
+router.get('/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    res.redirect('/dashboard');
+  }
+);
+
+// Regular login route (for JWT login)
+router.post('/login', login);
+
+// ✅ Registration Route with Validation Middleware
+// 1. Validation with express-validator to ensure correct data format
+//    - email must be valid
+//    - password must be at least 6 characters long
+router.post('/register', [
+  body('username').notEmpty().withMessage('Username is required'),
+  body('email').isEmail().withMessage('Must be a valid email address'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+], register);
+
+module.exports = router;
+
+// Controllers/authController.js
+
+// controllers/authController.js
+const bcrypt = require('bcryptjs');
+const { User } = require('../models');
+const { validationResult } = require('express-validator');
+
+// Register function
+exports.register = async (req, res) => {
+  // 1. Validate inputs using express-validator
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { username, email, password } = req.body;
+
+  try {
+    // 2. Check if email already exists
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    // 3. Hash the user's plain-text password securely
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Why bcrypt.hash(password, 12)?
+    // req.body.password: This is the plain-text password from the user.
+    // 12: This is the salt rounds – it defines how complex the hash is.
+    //     More rounds = more secure (but slightly slower).
+    //     12 is a common, safe choice that balances speed and security.
+
+    // 4. Create the user with the hashed password
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    // PURPOSE:
+    // It's used to hash the user's password before saving it to your database. This is a best practice in authentication systems to protect user data.
+
+    // Why hashing is important:
+    // If your database is ever compromised, the attacker can't see the real passwords.
+    // You never store passwords in plain text — only hashed versions.
+
+    // 5. Respond with success (no plain password returned)
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
+
+  } catch (err) {
+    console.error('Registration Error:', err);
+    res.status(500).json({ message: 'Server error during registration.' });
+  }
+};
+
+// Login function (JWT-based login example)
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // 1. Find user by email
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    // 2. Compare the hashed password with the plain-text password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    // 3. Create JWT (example with jsonwebtoken)
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ userId: user.id }, 'your_jwt_secret_key', { expiresIn: '1h' });
+
+    // 4. Send the JWT as a response
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+    });
+
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ message: 'Server error during login.' });
+  }
+};
 
 # 5. HELMET + CSP HEADERS
+// In server.js
+
+const helmet = require('helmet');
+
+app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://apis.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  })
+);
 
 # 6.RBAC MIDDLEWARE
 
