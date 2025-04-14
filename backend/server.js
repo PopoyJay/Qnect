@@ -28,6 +28,22 @@ app.use(
 // ✅ Middleware to parse JSON request bodies
 app.use(express.json());
 
+// ✅ HTTP Logging Middleware
+const morgan = require('morgan');
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  transports: [
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
+
+app.use(morgan('combined', {
+  stream: {
+    write: (message) => logger.info(message.trim()),
+  },
+}));
+
 // ✅ Rate Limiter Middleware
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,     // 15 minutes
