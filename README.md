@@ -666,7 +666,143 @@ app.use(
   })
 );
 
+//Update Code in Server.js with Helmet
+
+// Load environment variables from .env file
+require('dotenv').config();
+
+// Import Express and create an app
+const express = require("express");
+const app = express();
+
+// Import Helmet for security
+const helmet = require("helmet");
+
+// Import rate limiter middleware
+const rateLimit = require('express-rate-limit');
+
+// ✅ Use Helmet Middleware for security headers
+app.use(helmet());
+
+// ✅ Optional: Configure Content Security Policy (CSP)
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://apis.google.com"], // For Google OAuth
+      styleSrc: ["'self'", "'unsafe-inline'"],          // Allow inline styles
+    },
+  })
+);
+
+// ✅ Middleware to parse JSON request bodies
+app.use(express.json());
+
+// ✅ Rate Limiter Middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,     // 15 minutes
+  max: 100,                     // Limit each IP to 100 requests per windowMs
+  message: '⚠️ Too many requests from this IP, please try again after 15 minutes.'
+});
+app.use('/api/', limiter); // Apply rate limiting to /api/* routes
+
+// ✅ Define a basic route
+app.get("/", (req, res) => {
+    res.send("Qnect!");
+});
+
+// ✅ Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+});
+
 # 6.RBAC MIDDLEWARE
+
+// middleware/role.js
+
+module.exports = function (roles) {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) return res.status(403).json({ error: 'Access Denied' });
+    next();
+  };
+};
+
+// Create middleware/isAuth.js
+
+const jwt = require('jsonwebtoken');
+
+module.exports = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  // 1. Check if Authorization header is present
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No token provided, authorization denied' });
+  }
+
+  const token = authHeader.split(' ')[1]; // Extract token from 'Bearer <token>'
+
+  try {
+    // 2. Verify token using your secret key
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
+
+    // 3. Attach user info to request for further use
+    req.user = decoded;
+
+    next(); // Call next middleware (e.g., role check)
+  } catch (err) {
+    console.error('Token verification failed:', err);
+    res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+
+// Update login in authController.js
+
+const token = jwt.sign(
+  {
+    userId: user.id,
+    role: user.role,  // 👈 make sure this is included
+  },
+  process.env.JWT_SECRET || 'your_jwt_secret_key',
+  { expiresIn: '1h' }
+);
+
+// Full updated login function in authController.js
+
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role, // 👈 important for RBAC
+      },
+      process.env.JWT_SECRET || 'your_jwt_secret_key',
+      { expiresIn: '1h' }
+    );
+
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+    });
+
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ message: 'Server error during login.' });
+  }
+};
 
 # 7. SESSION & COOKIE SETTINGS
 

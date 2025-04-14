@@ -78,7 +78,14 @@ exports.login = async (req, res) => {
 
     // 3. Create JWT (example with jsonwebtoken)
     const jwt = require('jsonwebtoken');
-    const token = jwt.sign({ userId: user.id }, 'your_jwt_secret_key', { expiresIn: '1h' });
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role, // 👈 include role here
+      },
+      process.env.JWT_SECRET || 'your_jwt_secret_key',
+      { expiresIn: '1h' }
+    );
 
     // 4. Send the JWT as a response
     res.status(200).json({
