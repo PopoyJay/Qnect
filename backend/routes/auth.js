@@ -1,42 +1,16 @@
-// 2.1 Password Hashing During User Registration (with Explanation)
-const bcrypt = require('bcryptjs'); // Library for hashing passwords securely
-const { User } = require('../models'); // Sequelize User model (adjust path if needed)
-
-// Hash the user's plain-text password
-const hashedPassword = await bcrypt.hash(req.body.password, 12);
-
-// Why bcrypt.hash(password, 12)?
-    // req.body.password: This is the plain-text password from the user.
-    // 12: This is the salt rounds – it defines how complex the hash is.
-        // More rounds = more secure (but slightly slower).
-        // 12 is a common, safe choice that balances speed and security.
-
-// Save the new user to the database with the hashed password
-await User.create({
-  username: req.body.username,  // user's chosen username
-  email: req.body.email,        // user's email
-  password: hashedPassword,     // hashed version, never store plain-text passwords
-});
-
-// PURPOSE:
-    // It's used to hash the user's password before saving it to your database. This is a best practice in authentication systems to protect user data.
-
-// Why hashing is important:
-    // If your database is ever compromised, the attacker can't see the real passwords.
-    // You never store passwords in plain text — only hashed versions.
-
-// 2.2 JWT Login (jsonwebtoken)
-// In routes/auth.js
-
+// routes/auth.js
 const express = require('express');
 const passport = require('passport');
-const { login, register } = require('../controllers/authController'); // Optional: Add register controller
+const { body } = require('express-validator');
+const { login, register } = require('../controllers/authController');
+
 const router = express.Router();
 
-// Google OAuth Route
+// Google OAuth Routes
+// Route to initiate Google OAuth authentication
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-// Google OAuth Callback Route
+// Google OAuth callback route, which is triggered after successful authentication with Google
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
@@ -47,7 +21,14 @@ router.get('/google/callback',
 // Regular login route (for JWT login)
 router.post('/login', login);
 
-// Optional: Register route
-router.post('/register', register);
+// ✅ Registration Route with Validation Middleware
+// 1. Validation with express-validator to ensure correct data format
+//    - email must be valid
+//    - password must be at least 6 characters long
+router.post('/register', [
+  body('username').notEmpty().withMessage('Username is required'),
+  body('email').isEmail().withMessage('Must be a valid email address'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+], register);
 
 module.exports = router;

@@ -506,12 +506,46 @@ router.get('/google/callback',
   (req, res) => {
     res.redirect('/dashboard');
   }
+);
 
+// Regular login route (for JWT login)
+router.post('/login', login);
 
+// Optional: Register route
+router.post('/register', register);
 
+module.exports = router;
 
-# ------------------------------------------------------------------------------------------------------------------------------------------------#
+# 4. INPUT VALIDATION & SANITIZATION (EXPRESS-VALIDATION
+// In routes/auth.js
 
+  const { body, validationResult } = require('express-validator');
+
+  router.post('/register',
+    body('email').isEmail(),
+    body('password').isLength({ min: 6 }),
+    (req, res) => {
+     const errors = validationResult(req);
+     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+     // Proceed with registration
+   }
+  );
+
+# 5. HELMET + CSP HEADERS
+
+# 6.RBAC MIDDLEWARE
+
+# 7. SESSION & COOKIE SETTINGS
+
+# 8. LOGGING WITH WINSTON + MORGAN
+
+# 9. DATABASE SECURITY
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Test Authentication Using Postman
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------
 # GITHUB SETUP
 # Connect Local Project to Github
   # 1. Open Git Bash/Terminal inside your project folder:
