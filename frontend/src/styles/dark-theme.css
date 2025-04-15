@@ -1,0 +1,44 @@
+body,
+.dark-theme {
+  background-color: #121212;
+  color: #f1f1f1;
+}
+
+.login-card {
+  background-color: #1f1f1f;
+  border: none;
+}
+
+.login-card .form-control {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: #f1f1f1;
+}
+
+.login-card .form-control::placeholder {
+  color: #bbb;
+}
+
+.login-card .btn-primary {
+  background-color: #3a86ff;
+  border: none;
+}
+
+.login-card .btn-primary:hover {
+  background-color: #265dbe;
+}
+
+.dashboard-page {
+  min-height: 100vh;
+  background-color: #121212;
+  padding: 20px;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+}
+
+.table td, .table th {
+  vertical-align: middle;
+}

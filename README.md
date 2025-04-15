@@ -906,10 +906,19 @@ app.listen(PORT, () => {
 });
 
 # 9. DATABASE SECURITY
+// Sequelize ORM already uses parameterized queries internally
+// Secure: Sequelize uses parameterized queries, preventing SQL injection
+await User.findOne({ where: { email: req.body.email } });
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------
+# -------------
+  # FRONTEND
+# -------------
 
-# Test Authentication Using Postman
+
+
+
+
+
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------
 # GITHUB SETUP
