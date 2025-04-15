@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import { UserProvider } from './context/UserContext'; // ✅ Import it
+import { UserProvider } from './contexts/UserContext'; // ✅ Import added
 
 function App() {
   return (
