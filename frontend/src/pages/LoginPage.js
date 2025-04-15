@@ -34,7 +34,9 @@ const LoginPage = () => {
                     className="qnect-logo animate-logo"
                     style={{ height: '80px' }}
                   />
-                  <h2 className="mt-3 text-light">Qnect</h2>
+                  <h2 className="mt-3" style={{ color: 'black' }}>
+                    Smart Ticketing System
+                  </h2>
                 </div>
                 <Form onSubmit={handleSubmit}>
                   <Form.Group controlId="formEmail" className="mb-3">

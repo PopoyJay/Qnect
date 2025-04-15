@@ -25,3 +25,8 @@
     vertical-align: middle;
   }
   
+  .sidebar-section-header {
+    padding-left: 10px;
+    font-size: 0.75rem;
+    letter-spacing: 0.05rem;
+  }

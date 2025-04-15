@@ -10,7 +10,7 @@ const TicketsPage = () => {
       <Sidebar />
       <div className="main-content flex-grow-1 p-4" style={{ marginLeft: '220px' }}>
         <Container fluid>
-          <h2 className="text-light mb-4">Create a New Ticket</h2>
+        <h2 className="mb-4" style={{ color: 'black' }}>Create a New Ticket</h2>
           <Row>
             <Col md={12}>
               <Card className="bg-dark text-light shadow-sm">

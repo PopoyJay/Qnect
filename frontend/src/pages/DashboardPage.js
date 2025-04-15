@@ -26,7 +26,7 @@ const DashboardPage = () => {
       <Sidebar />
       <div className="main-content flex-grow-1 p-4" style={{ marginLeft: '220px' }}>
         <Container fluid>
-          <h2 className="text-light mb-4">Welcome to Qnect Dashboard</h2>
+        <h2 className="mb-4" style={{ color: 'black' }}>Welcome to Qnect Dashboard</h2>
 
           {/* Dashboard Stats */}
           <Row className="mb-4">
