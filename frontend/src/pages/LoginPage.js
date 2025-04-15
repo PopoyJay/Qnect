@@ -1,15 +1,23 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Card } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import '../styles/dark-theme.css'; // make sure this path is correct
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Connect with your backend login API
-    console.log('Logging in with:', { email, password });
+
+    // Simulated login logic — replace with real API call later
+    if (email === 'admin@qnect.com' && password === 'admin123') {
+      localStorage.setItem('token', 'fake-jwt-token'); // simulate saving a token
+      navigate('/dashboard'); // ✅ redirect to dashboard
+    } else {
+      alert('Invalid credentials. Try admin@qnect.com / admin123 for now.');
+    }
   };
 
   return (
@@ -19,15 +27,15 @@ const LoginPage = () => {
           <Col md={6} lg={4}>
             <Card className="shadow login-card">
               <Card.Body>
-              <div className="text-center mb-4">
-              <img 
-                src="/assets/qnect-logo.png" 
-                alt="Qnect Logo" 
-                className="qnect-logo animate-logo"
-                style={{ height: '80px' }}
-              />
-              <h2 className="mt-3 text-light">Qnect</h2>
-              </div>
+                <div className="text-center mb-4">
+                  <img 
+                    src="/assets/qnect-logo.png" 
+                    alt="Qnect Logo" 
+                    className="qnect-logo animate-logo"
+                    style={{ height: '80px' }}
+                  />
+                  <h2 className="mt-3 text-light">Qnect</h2>
+                </div>
                 <Form onSubmit={handleSubmit}>
                   <Form.Group controlId="formEmail" className="mb-3">
                     <Form.Label className="text-light">Email address</Form.Label>
