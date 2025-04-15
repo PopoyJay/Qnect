@@ -43,5 +43,10 @@ const Sidebar = () => {
     </div>
   );
 };
-
+<li className="nav-item">
+  <Link to="/tickets" className="nav-link">
+    <i className="bi bi-card-list me-2"></i>
+    Tickets
+  </Link>
+</li>
 export default Sidebar;
