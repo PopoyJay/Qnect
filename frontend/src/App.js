@@ -2,11 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
-import TicketsPage from './pages/TicketsPage';
-import UserManagementPage from './pages/UserManagementPage';
-import UserRolesPage from './pages/UserRolesPage'; // ✅ Import UserRolesPage
-import Sidebar from './components/Sidebar';
-import './App.css';
+import TicketsPage from './pages/TicketsPage'; 
+import UserManagementPage from './pages/UserManagementPage'; 
+import DepartmentPage from './pages/DepartmentPage'; // Add DepartmentPage import
+import UserRolesPage from './pages/UserRolesPage'; // Add UserRolesPage import
+import Sidebar from './components/Sidebar'; 
+import './App.css'; 
 
 // ✅ Simple protected route wrapper
 const PrivateRoute = ({ children }) => {
@@ -15,19 +16,21 @@ const PrivateRoute = ({ children }) => {
 };
 
 const App = () => {
+  const isLoggedIn = localStorage.getItem('token');
+
   return (
     <Router>
       <div className="layout-container">
-        {/* Sidebar */}
-        <Sidebar />
+        {/* Only render Sidebar if the user is logged in */}
+        {isLoggedIn && <Sidebar />}
 
         {/* Main Content Area */}
-        <div className="content">
+        <div className="content" style={{ marginLeft: isLoggedIn ? '220px' : '0' }}>
           <Routes>
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginPage />} />
 
-            {/* ✅ Protected Dashboard Route */}
+            {/* Protected Routes */}
             <Route
               path="/dashboard"
               element={
@@ -36,8 +39,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-
-            {/* ✅ Protected Tickets Route */}
             <Route
               path="/tickets"
               element={
@@ -46,8 +47,6 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-
-            {/* ✅ Protected User Management Route */}
             <Route
               path="/users"
               element={
@@ -56,8 +55,14 @@ const App = () => {
                 </PrivateRoute>
               }
             />
-
-            {/* ✅ Protected User Roles Route */}
+            <Route
+              path="/departments"
+              element={
+                <PrivateRoute>
+                  <DepartmentPage />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/roles"
               element={

@@ -1,0 +1,144 @@
+import React, { useState } from 'react';
+import { Container, Card, Button, Form, Table, Modal } from 'react-bootstrap';
+
+const DepartmentPage = () => {
+  const [departments, setDepartments] = useState([
+    { id: 1, name: 'HR' },
+    { id: 2, name: 'Finance' },
+    { id: 3, name: 'IT' },
+  ]);
+
+  const [newDepartment, setNewDepartment] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [departmentToDelete, setDepartmentToDelete] = useState(null);
+  const [editingDepartment, setEditingDepartment] = useState(null);
+  const [editedName, setEditedName] = useState('');
+
+  const handleAddDepartment = () => {
+    if (newDepartment.trim() === '') return;
+    const newId = departments.length ? Math.max(...departments.map(d => d.id)) + 1 : 1;
+    setDepartments([...departments, { id: newId, name: newDepartment }]);
+    setNewDepartment('');
+  };
+
+  const handleConfirmDelete = () => {
+    setDepartments(departments.filter(dept => dept.id !== departmentToDelete));
+    setShowConfirm(false);
+  };
+
+  const handleEditClick = (dept) => {
+    setEditingDepartment(dept.id);
+    setEditedName(dept.name);
+  };
+
+  const handleSaveEdit = () => {
+    setDepartments(departments.map(dept =>
+      dept.id === editingDepartment ? { ...dept, name: editedName } : dept
+    ));
+    setEditingDepartment(null);
+    setEditedName('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingDepartment(null);
+    setEditedName('');
+  };
+
+  return (
+    <div className="department-page p-4" style={{ marginLeft: '10px' }}>
+      <Container fluid>
+        <h2 className="mb-4">🏢 Departments</h2>
+
+        {/* Add Department */}
+        <Card className="shadow-sm mb-4">
+          <Card.Header>
+            <h5 className="mb-0">Add New Department</h5>
+          </Card.Header>
+          <Card.Body>
+            <Form className="d-flex gap-2">
+              <Form.Control
+                type="text"
+                placeholder="Enter department name"
+                value={newDepartment}
+                onChange={(e) => setNewDepartment(e.target.value)}
+              />
+              <Button variant="primary" onClick={handleAddDepartment}>Add Department</Button>
+            </Form>
+          </Card.Body>
+        </Card>
+
+        {/* Department List */}
+        <Card className="shadow-sm">
+          <Card.Header>
+            <h5 className="mb-0">Existing Departments</h5>
+          </Card.Header>
+          <Card.Body>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Department Name</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {departments.map((dept, index) => (
+                  <tr key={dept.id}>
+                    <td>{index + 1}</td>
+                    <td>
+                      {editingDepartment === dept.id ? (
+                        <Form.Control
+                          type="text"
+                          value={editedName}
+                          onChange={(e) => setEditedName(e.target.value)}
+                        />
+                      ) : (
+                        dept.name
+                      )}
+                    </td>
+                    <td className="d-flex gap-2">
+                      {editingDepartment === dept.id ? (
+                        <>
+                          <Button variant="success" size="sm" onClick={handleSaveEdit}>Save</Button>
+                          <Button variant="secondary" size="sm" onClick={handleCancelEdit}>Cancel</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="warning" size="sm" onClick={() => handleEditClick(dept)}>Edit</Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => {
+                              setDepartmentToDelete(dept.id);
+                              setShowConfirm(true);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Card.Body>
+        </Card>
+
+        {/* Confirm Delete Modal */}
+        <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Confirm Delete</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>Are you sure you want to delete this department?</Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowConfirm(false)}>Cancel</Button>
+            <Button variant="danger" onClick={handleConfirmDelete}>Delete</Button>
+          </Modal.Footer>
+        </Modal>
+      </Container>
+    </div>
+  );
+};
+
+export default DepartmentPage;
