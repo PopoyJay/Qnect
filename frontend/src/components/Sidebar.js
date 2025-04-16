@@ -24,6 +24,12 @@ const Sidebar = () => {
             🎫 Create Tickets
           </Link>
         </Nav.Item>
+        {/* Add the Ticket Status link here */}
+        <Nav.Item>
+          <Link to="/ticket-status" className={`nav-link ${isActive('/ticket-status')}`}>
+            🗂️ Ticket Status
+          </Link>
+        </Nav.Item>
 
         {/* === ADMINISTRATION SECTION === */}
         <div className="text-uppercase fw-bold small text-secondary mt-4 mb-1 px-2">Administration</div>
@@ -55,11 +61,6 @@ const Sidebar = () => {
         <Nav.Item>
           <Link to="/statuses" className={`nav-link ${isActive('/statuses')}`}>
             📌 Statuses
-          </Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Link to="/settings" className={`nav-link ${isActive('/settings')}`}>
-            ⚙️ Settings
           </Link>
         </Nav.Item>
 

@@ -10,6 +10,7 @@ import UserRolesPage from './pages/UserRolesPage';
 import CategoriesPage from './pages/CategoriesPage'; 
 import PrioritiesPage from './pages/PrioritiesPage';
 import StatusesPage from './pages/StatusesPage'; // ✅ Added
+import TicketStatusPage from './pages/TicketStatusPage'; // ✅ Import the new page
 
 import Sidebar from './components/Sidebar'; 
 import './App.css'; 
@@ -43,6 +44,10 @@ const App = () => {
             <Route path="/categories" element={<PrivateRoute><CategoriesPage /></PrivateRoute>} />
             <Route path="/priorities" element={<PrivateRoute><PrioritiesPage /></PrivateRoute>} />
             <Route path="/statuses" element={<PrivateRoute><StatusesPage /></PrivateRoute>} />
+            
+            {/* Add the new Ticket Status page route */}
+            <Route path="/ticket-status" element={<PrivateRoute><TicketStatusPage /></PrivateRoute>} /> {/* Add this line */}
+
           </Routes>
         </div>
       </div>
