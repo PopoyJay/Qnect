@@ -21,7 +21,7 @@ const Sidebar = () => {
         </Nav.Item>
         <Nav.Item>
           <Link to="/tickets" className={`nav-link ${isActive('/tickets')}`}>
-            🎫 Tickets
+            🎫 Create Tickets
           </Link>
         </Nav.Item>
 

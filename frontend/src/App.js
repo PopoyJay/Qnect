@@ -1,15 +1,20 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import TicketsPage from './pages/TicketsPage'; 
 import UserManagementPage from './pages/UserManagementPage'; 
-import DepartmentPage from './pages/DepartmentPage'; // Add DepartmentPage import
-import UserRolesPage from './pages/UserRolesPage'; // Add UserRolesPage import
+import DepartmentPage from './pages/DepartmentPage'; 
+import UserRolesPage from './pages/UserRolesPage'; 
+import CategoriesPage from './pages/CategoriesPage'; 
+import PrioritiesPage from './pages/PrioritiesPage';
+import StatusesPage from './pages/StatusesPage'; // ✅ Added
+
 import Sidebar from './components/Sidebar'; 
 import './App.css'; 
 
-// ✅ Simple protected route wrapper
+// ✅ Protected route component
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   return token ? children : <Navigate to="/login" replace />;
@@ -21,56 +26,23 @@ const App = () => {
   return (
     <Router>
       <div className="layout-container">
-        {/* Only render Sidebar if the user is logged in */}
+        {/* Show sidebar only when logged in */}
         {isLoggedIn && <Sidebar />}
 
-        {/* Main Content Area */}
         <div className="content" style={{ marginLeft: isLoggedIn ? '220px' : '0' }}>
           <Routes>
             <Route path="/" element={<Navigate to="/login" />} />
             <Route path="/login" element={<LoginPage />} />
 
             {/* Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <DashboardPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/tickets"
-              element={
-                <PrivateRoute>
-                  <TicketsPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <PrivateRoute>
-                  <UserManagementPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/departments"
-              element={
-                <PrivateRoute>
-                  <DepartmentPage />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/roles"
-              element={
-                <PrivateRoute>
-                  <UserRolesPage />
-                </PrivateRoute>
-              }
-            />
+            <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+            <Route path="/tickets" element={<PrivateRoute><TicketsPage /></PrivateRoute>} />
+            <Route path="/users" element={<PrivateRoute><UserManagementPage /></PrivateRoute>} />
+            <Route path="/departments" element={<PrivateRoute><DepartmentPage /></PrivateRoute>} />
+            <Route path="/roles" element={<PrivateRoute><UserRolesPage /></PrivateRoute>} />
+            <Route path="/categories" element={<PrivateRoute><CategoriesPage /></PrivateRoute>} />
+            <Route path="/priorities" element={<PrivateRoute><PrioritiesPage /></PrivateRoute>} />
+            <Route path="/statuses" element={<PrivateRoute><StatusesPage /></PrivateRoute>} />
           </Routes>
         </div>
       </div>

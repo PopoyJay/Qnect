@@ -152,16 +152,13 @@ const UserManagementPage = () => {
                       <td>{user.role}</td>
                       <td>
                         <Button
-                          variant="outline-secondary"
-                          size="sm"
-                          className="me-2"
+                          className="btn btn-warning btn-sm me-2"
                           onClick={() => handleEditClick(index)}
                         >
                           Edit
                         </Button>
                         <Button
-                          variant="outline-danger"
-                          size="sm"
+                          className="btn btn-danger btn-sm"
                           onClick={() => handleDeleteUser(index)}
                         >
                           Delete
