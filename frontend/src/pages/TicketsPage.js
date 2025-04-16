@@ -1,156 +1,147 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
-import Sidebar from '../components/Sidebar';
+import '../styles/ticket.css';
 
 const TicketsPage = () => {
-  const [formData, setFormData] = useState({
-    subject: '',
-    description: '',
-    category: '',
-    priority: '',
-    department: '',
-    status: '',
-    assignedTo: '',
-  });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const [subject, setSubject] = useState('');
+  const [department, setDepartment] = useState('');
+  const [priority, setPriority] = useState('');
+  const [status, setStatus] = useState('');
+  const [assignedTo, setAssignedTo] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [attachment, setAttachment] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Ticket Submitted:', formData);
-    alert('Ticket created successfully!');
-    setFormData({
-      subject: '',
-      description: '',
-      category: '',
-      priority: '',
-      department: '',
-      status: '',
-      assignedTo: '',
-    });
+    // Collect ticket data
+    const ticketData = {
+      subject,
+      department,
+      priority,
+      status,
+      assignedTo,
+      category,
+      description,
+      attachment
+    };
+    // Log for testing purposes
+    console.log(ticketData);
   };
 
   return (
-    <div className="d-flex">
-      <Sidebar />
-      <div className="main-content flex-grow-1 p-4" style={{ marginLeft: '10px', }}>
-        <Container fluid>
-          <h2 className="text-dark mb-4">Create New Ticket</h2>
-          <Row>
-            <Col md={8}>
-              <Card className="shadow-sm">
-                <Card.Body>
-                  <Form onSubmit={handleSubmit}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Subject</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
+    <div className="ticket-form-container">
+      <h2>Create Ticket</h2>
+      <form onSubmit={handleSubmit} className="ticket-form">
+        <div className="form-columns">
+          {/* Left Column */}
+          <div className="form-column">
+            <div className="form-group">
+              <label htmlFor="subject">Subject</label>
+              <input
+                type="text"
+                id="subject"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                required
+              />
+            </div>
 
-                    <Form.Group className="mb-3">
-                      <Form.Label>Description</Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        name="description"
-                        rows={4}
-                        value={formData.description}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
+            <div className="form-group">
+              <label htmlFor="department">Department</label>
+              <select
+                id="department"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+              >
+                <option value="">Select Department</option>
+                <option value="IT">IT</option>
+                <option value="HR">HR</option>
+                <option value="Support">Support</option>
+              </select>
+            </div>
 
-                    <Form.Group className="mb-3">
-                      <Form.Label>Category</Form.Label>
-                      <Form.Select
-                        name="category"
-                        value={formData.category}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">Select Category</option>
-                        <option value="Technical">Technical</option>
-                        <option value="Support">Support</option>
-                        <option value="Network">Network</option>
-                      </Form.Select>
-                    </Form.Group>
+            <div className="form-group">
+              <label htmlFor="priority">Priority</label>
+              <select
+                id="priority"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="">Select Priority</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
 
-                    <Form.Group className="mb-3">
-                      <Form.Label>Priority</Form.Label>
-                      <Form.Select
-                        name="priority"
-                        value={formData.priority}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">Select Priority</option>
-                        <option value="High">High</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Low">Low</option>
-                      </Form.Select>
-                    </Form.Group>
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
+              <select
+                id="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+              >
+                <option value="">Select Status</option>
+                <option value="Open">Open</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
 
-                    <Form.Group className="mb-3">
-                      <Form.Label>Department</Form.Label>
-                      <Form.Select
-                        name="department"
-                        value={formData.department}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">Select Department</option>
-                        <option value="IT">IT</option>
-                        <option value="HR">HR</option>
-                        <option value="Finance">Finance</option>
-                      </Form.Select>
-                    </Form.Group>
+            {/* Newly Added Category Field */}
+            <div className="form-group">
+              <label htmlFor="category">Category</label>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="">Select Category</option>
+                <option value="Software">Software</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Network">Network</option>
+                <option value="General">General</option>
+              </select>
+            </div>
+          </div>
 
-                    <Form.Group className="mb-3">
-                      <Form.Label>Status</Form.Label>
-                      <Form.Select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">Select Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
-                      </Form.Select>
-                    </Form.Group>
+          {/* Right Column */}
+          <div className="form-column">
+            <div className="form-group">
+              <label htmlFor="description">Description</label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows="5"
+                required
+              />
+            </div>
 
-                    <Form.Group className="mb-3">
-                      <Form.Label>Assigned To</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="assignedTo"
-                        value={formData.assignedTo}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
+            <div className="form-group">
+              <label htmlFor="attachment">Attachment</label>
+              <input
+                type="file"
+                id="attachment"
+                onChange={(e) => setAttachment(e.target.files[0])}
+              />
+            </div>
 
-                    <Button variant="primary" type="submit">
-                      Submit Ticket
-                    </Button>
-                  </Form>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
+            {/* Newly Added Assigned To Field - Now in Right Column */}
+            <div className="form-group">
+              <label htmlFor="assignedTo">Assigned To</label>
+              <input
+                type="text"
+                id="assignedTo"
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" className="submit-button">Create Ticket</button>
+      </form>
     </div>
   );
 };
