@@ -910,9 +910,201 @@ app.listen(PORT, () => {
 // Secure: Sequelize uses parameterized queries, preventing SQL injection
 await User.findOne({ where: { email: req.body.email } });
 
-# -------------
-  # FRONTEND
-# -------------
+# FRONTEND
+
+# ------------------------------------------------------------------------------------------------------------------------------------------
+
+# SECURITY - LOGIN
+# 1. Install dependencies (backend):
+npm install jsonwebtoken bcryptjs
+  
+# 2. Add imports at the top (after require('dotenv').config()):
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+# 3. Add your mock user database (or later connect to MongoDB, SQL, etc.): Place this after app.use(express.json());
+      // Temporary hardcoded users array (use DB in real setup)
+const users = [
+  {
+    id: 1,
+    email: 'user@example.com',
+    password: '$2a$10$zP.KsmBO1LZj1nxIuOEj3uf0YAdkPaBzvHiXmz1h0vQjz58OBpCm6' // 'password123'
+  },
+];
+
+# 4. Add the login route (after the rate limiter and logging middleware):
+// Login route
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if user exists
+  const user = users.find(u => u.email === email);
+  if (!user) {
+    return res.status(400).json({ message: 'Invalid email or password' });
+  }
+
+  // Compare password with hash
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({ message: 'Invalid email or password' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'secretkey123', {
+    expiresIn: '1h'
+  });
+
+  res.json({ token });
+});
+
+# 5. Secure a sample protected route:
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1]; // Expecting 'Bearer token'
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secretkey123', (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+// Example of a protected route
+app.get('/api/protected', authenticateToken, (req, res) => {
+  res.json({ message: '✅ You accessed a protected route!', user: req.user });
+});
+
+# Final server.js Structure Outline:
+server.js
+│
+├── Load env variables
+├── Imports (express, helmet, morgan, jwt, bcrypt)
+├── App setup and middleware (helmet, rate limit, logging)
+├── Users array
+├── Routes:
+│   ├── POST /api/login       ← 🔐 JWT + bcrypt login
+│   └── GET /api/protected    ← 🔒 Protected route
+└── Start server on PORT
+
+# Bonus: Add .env file:
+PORT=5000
+JWT_SECRET=your_super_secure_key_here
+
+# Here's your final updated server.js code with everything securely integrated:
+✅ Includes:
+    Helmet security
+    Logging with morgan + winston
+    Rate limiting
+    JWT authentication
+    Password hashing via bcryptjs
+    Protected route example
+    .env-ready config
+
+// Load environment variables from .env file
+require('dotenv').config();
+
+const express = require("express");
+const helmet = require("helmet");
+const morgan = require('morgan');
+const winston = require('winston');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
+
+const app = express();
+
+// ✅ Helmet for security headers
+app.use(helmet());
+
+// ✅ Optional CSP (Content Security Policy)
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://apis.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  })
+);
+
+// ✅ Body parser
+app.use(express.json());
+
+// ✅ Winston Logger
+const logger = winston.createLogger({
+  transports: [new winston.transports.File({ filename: 'combined.log' })],
+});
+app.use(morgan('combined', {
+  stream: { write: (message) => logger.info(message.trim()) },
+}));
+
+// ✅ Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: '⚠️ Too many requests from this IP, try again later.'
+});
+app.use('/api/', limiter);
+
+// ✅ Sample user database (replace with real DB later)
+const users = [
+  {
+    id: 1,
+    email: 'user@example.com',
+    password: '$2a$10$zP.KsmBO1LZj1nxIuOEj3uf0YAdkPaBzvHiXmz1h0vQjz58OBpCm6', // 'password123'
+  },
+];
+
+// ✅ Login route
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = users.find(u => u.email === email);
+  if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });
+
+  const token = jwt.sign(
+    { userId: user.id },
+    process.env.JWT_SECRET || 'secretkey123',
+    { expiresIn: '1h' }
+  );
+
+  res.json({ token });
+});
+
+// ✅ Middleware to protect routes
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
+
+  if (!token) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET || 'secretkey123', (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+// ✅ Example protected route
+app.get('/api/protected', authenticateToken, (req, res) => {
+  res.json({ message: '✅ You accessed a protected route!', user: req.user });
+});
+
+// ✅ Root route
+app.get("/", (req, res) => {
+  res.send("Qnect!");
+});
+
+// ✅ Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+});
 
 
 
@@ -920,7 +1112,9 @@ await User.findOne({ where: { email: req.body.email } });
 
 
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------
 # GITHUB SETUP
 # Connect Local Project to Github
   # 1. Open Git Bash/Terminal inside your project folder:

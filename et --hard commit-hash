@@ -1,0 +1,23 @@
+[33mf6dda7e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Final Frontend
+[33m534b8a5[m Added Two-column ticket page
+[33m67ff58e[m Added All Administration Button
+[33mbef615c[m Added Department
+[33ma6f9f3a[m Added User and User Roles
+[33mf5e8dcf[m Updated the Sidebar
+[33m5f4696f[m Adding Ticket Forms
+[33m7332337[m Adding Login Functionality-Directing to Dashboard
+[33m2ffa07c[m Adding Login Page
+[33m5615bb3[m Adding User Interface
+[33m0f99854[m Adding Winston + Morgan for Logging and Monitoring
+[33ma232edf[m Adding RBAC Middleware
+[33m70876fe[m Adding Content Security Policy - Helmet.j for Secure HTTP Headers
+[33ma1f2667[m Adding Express-Validator
+[33mb5b2c41[m Adding Routes
+[33m65a7013[m  Adding Google SSO Setup
+[33ma8bdf3d[m Adding Express Rate Limiter
+[33ma00d4d0[m Adding JWT Login
+[33md274624[m Add Bycrypt Password Hasing
+[33m28bd56f[m Updated the API
+[33m435c53f[m Updated the Database Connection to Node.js)
+[33m7be8d93[m Updated the Server Port
+[33maa91b49[m Initial commit
