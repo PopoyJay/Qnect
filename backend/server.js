@@ -133,7 +133,6 @@ app.get('/api/protected', authenticateToken, (req, res) => {
 // ✅ Department CRUD Routes
 const { Department } = models;
 
-// ➕ Create Department
 app.post('/api/departments', authenticateToken, async (req, res) => {
   const { name } = req.body;
   try {
@@ -145,7 +144,6 @@ app.post('/api/departments', authenticateToken, async (req, res) => {
   }
 });
 
-// 📄 Read All Departments
 app.get('/api/departments', authenticateToken, async (req, res) => {
   try {
     const departments = await Department.findAll();
@@ -156,7 +154,6 @@ app.get('/api/departments', authenticateToken, async (req, res) => {
   }
 });
 
-// 📄 Read Department by ID
 app.get('/api/departments/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -169,7 +166,6 @@ app.get('/api/departments/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ✏️ Update Department
 app.put('/api/departments/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -185,7 +181,6 @@ app.put('/api/departments/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ❌ Delete Department
 app.delete('/api/departments/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -202,7 +197,6 @@ app.delete('/api/departments/:id', authenticateToken, async (req, res) => {
 // ✅ Category CRUD Routes
 const { Category } = models;
 
-// ➕ Create Category
 app.post('/api/categories', authenticateToken, async (req, res) => {
   const { name } = req.body;
   try {
@@ -214,7 +208,6 @@ app.post('/api/categories', authenticateToken, async (req, res) => {
   }
 });
 
-// 📄 Read All Categories
 app.get('/api/categories', authenticateToken, async (req, res) => {
   try {
     const categories = await Category.findAll();
@@ -225,7 +218,6 @@ app.get('/api/categories', authenticateToken, async (req, res) => {
   }
 });
 
-// 📄 Read Category by ID
 app.get('/api/categories/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -238,7 +230,6 @@ app.get('/api/categories/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ✏️ Update Category
 app.put('/api/categories/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -254,7 +245,6 @@ app.put('/api/categories/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ❌ Delete Category
 app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
@@ -266,6 +256,18 @@ app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
     console.error('❌ Error deleting category:', err.message);
     res.status(500).json({ message: 'Server error deleting category' });
   }
+});
+
+// ✅ Static Priorities and Statuses (No database)
+const priorities = ['Low', 'Medium', 'High', 'Urgent'];
+const statuses = ['Open', 'In Progress', 'Resolved', 'Closed'];
+
+app.get('/api/priorities', authenticateToken, (req, res) => {
+  res.json(priorities);
+});
+
+app.get('/api/statuses', authenticateToken, (req, res) => {
+  res.json(statuses);
 });
 
 // ✅ Start Server
