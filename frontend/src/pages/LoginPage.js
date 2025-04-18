@@ -6,10 +6,11 @@ import '../styles/LoginPage.css';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(''); // ✅ Added username state
   const [role, setRole] = useState('user');
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
-  const [loading, setLoading] = useState(false); // Loading state
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -18,54 +19,51 @@ const LoginPage = () => {
       return;
     }
 
-    setLoading(true); // Start loading
+    setLoading(true);
     api.post('/login', { email, password })
       .then((res) => {
         if (res.data.token) {
-          // Login successful, save the token and redirect
           localStorage.setItem('token', res.data.token);
           window.location.href = '/dashboard';
         } else {
-          // Assuming the backend returns specific error messages for wrong email or password
           setError('Invalid email or password.');
         }
-        setLoading(false); // Stop loading
+        setLoading(false);
       })
       .catch((err) => {
         if (err.response) {
-          // Display specific message based on the backend response
           if (err.response.status === 400) {
             const message = err.response.data.message || 'Invalid credentials';
-            setError(message); // Show specific error message
+            setError(message);
           } else {
             setError('Server error during login.');
           }
         } else {
           setError('Network error, please try again.');
         }
-        setLoading(false); // Stop loading
+        setLoading(false);
       });
   };
 
   const handleRegister = (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please enter both email and password.');
+    if (!email || !password || !username) {
+      setError('Please fill out all required fields.');
       return;
     }
 
-    setLoading(true); // Start loading
-    api.post('/register', { email, password, role })
+    setLoading(true);
+    api.post('/register', { email, password, username, role }) // ✅ Sent username
       .then(() => {
         setError('');
         alert('Registration successful!');
         setIsRegistering(false);
-        setLoading(false); // Stop loading
+        setLoading(false);
       })
       .catch((err) => {
         console.error(err);
         setError('Server error during registration.');
-        setLoading(false); // Stop loading
+        setLoading(false);
       });
   };
 
@@ -87,6 +85,7 @@ const LoginPage = () => {
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Password</Form.Label>
               <Form.Control
@@ -97,19 +96,35 @@ const LoginPage = () => {
                 required
               />
             </Form.Group>
+
+            {/* ✅ Show username field only when registering */}
             {isRegistering && (
-              <Form.Group className="mb-3">
-                <Form.Label>Role</Form.Label>
-                <Form.Control
-                  as="select"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                >
-                  <option value="user">User</option>
-                  <option value="admin">Admin</option>
-                </Form.Control>
-              </Form.Group>
+              <>
+                <Form.Group className="mb-3">
+                  <Form.Label>Username</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter username"
+                    required
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Role</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </Form.Control>
+                </Form.Group>
+              </>
             )}
+
             <Button variant="primary" type="submit" className="w-100" disabled={loading}>
               {loading ? <Spinner animation="border" size="sm" /> : isRegistering ? 'Register' : 'Login'}
             </Button>

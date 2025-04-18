@@ -14,13 +14,12 @@ const cors = require('cors');
 const app = express();
 
 // ✅ CORS Middleware — MUST come before routes and helmet
-// Enable CORS for all routes (for development purposes)
 app.use(cors({
-  origin: 'http://localhost:3000', // Allow your frontend to connect
-  credentials: true,  // Allow cookies or credentials to be sent with the request
+  origin: 'http://localhost:3000',
+  credentials: true,
 }));
 
-// ✅ Body parser (also before routes)
+// ✅ Body parser
 app.use(express.json());
 
 // ✅ PostgreSQL pool
@@ -50,15 +49,15 @@ app.use(morgan('combined', {
 
 // ✅ Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,  // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: '⚠️ Too many requests from this IP, try again later.'
 });
 app.use('/api/', limiter);
 
-// ✅ Register Route
+// ✅ Register Route (with username)
 app.post('/api/register', async (req, res) => {
-  const { email, password, role = 'user' } = req.body;
+  const { email, password, username, role = 'user' } = req.body;
 
   try {
     const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -70,8 +69,8 @@ app.post('/api/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const result = await pool.query(
-      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
-      [email, hashedPassword, role]
+      'INSERT INTO users (email, password, username, role) VALUES ($1, $2, $3, $4) RETURNING id, email, username, role',
+      [email, hashedPassword, username, role]
     );
 
     res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });
@@ -81,7 +80,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// ✅ Login Route (integrated)
+// ✅ Login Route
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -99,12 +98,12 @@ app.post('/api/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user.id, role: user.role }, // You can include more details here if needed
+      { userId: user.id, role: user.role },
       process.env.JWT_SECRET || 'secretkey123',
-      { expiresIn: '1h' }
+      { expiresIn: '30d' }
     );
 
-    res.json({ token });
+    res.json({ token, username: user.username, role: user.role });
   } catch (err) {
     console.error('❌ Login error:', err);
     res.status(500).json({ message: 'Server error during login' });
