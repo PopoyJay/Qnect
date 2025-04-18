@@ -3,7 +3,7 @@ import { Container, Card, Button, Table, Form, Modal } from 'react-bootstrap';
 import Sidebar from '../components/Sidebar';
 
 const UserRolesPage = () => {
-  const [roles, setRoles] = useState(['Admin', 'Technician', 'Manager']);
+  const [roles, setRoles] = useState(['Admin', 'Support', 'Agent']);
   const [newRole, setNewRole] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editIndex, setEditIndex] = useState(null);

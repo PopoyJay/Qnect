@@ -1,29 +1,43 @@
-import React, { useState } from 'react';
+// src/pages/DepartmentPage.jsx
+import React, { useState, useEffect } from 'react';
 import { Container, Card, Button, Form, Table, Modal } from 'react-bootstrap';
+import api from '../services/api';
 
 const DepartmentPage = () => {
-  const [departments, setDepartments] = useState([
-    { id: 1, name: 'HR' },
-    { id: 2, name: 'Finance' },
-    { id: 3, name: 'IT' },
-  ]);
-
+  const [departments, setDepartments] = useState([]);
   const [newDepartment, setNewDepartment] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState(null);
   const [editingDepartment, setEditingDepartment] = useState(null);
   const [editedName, setEditedName] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const handleAddDepartment = () => {
-    if (newDepartment.trim() === '') return;
-    const newId = departments.length ? Math.max(...departments.map(d => d.id)) + 1 : 1;
-    setDepartments([...departments, { id: newId, name: newDepartment }]);
-    setNewDepartment('');
+  // Fetch departments
+  const fetchDepartments = async () => {
+    try {
+      const response = await api.get('/departments');
+      setDepartments(response.data);
+    } catch (err) {
+      console.error('❌ Error fetching departments:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleConfirmDelete = () => {
-    setDepartments(departments.filter(dept => dept.id !== departmentToDelete));
-    setShowConfirm(false);
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const handleAddDepartment = async () => {
+    if (newDepartment.trim() === '') return;
+
+    try {
+      await api.post('/departments', { name: newDepartment });
+      setNewDepartment('');
+      fetchDepartments(); // Refresh list
+    } catch (err) {
+      console.error('❌ Error adding department:', err);
+    }
   };
 
   const handleEditClick = (dept) => {
@@ -31,17 +45,38 @@ const DepartmentPage = () => {
     setEditedName(dept.name);
   };
 
-  const handleSaveEdit = () => {
-    setDepartments(departments.map(dept =>
-      dept.id === editingDepartment ? { ...dept, name: editedName } : dept
-    ));
+  const handleCancelEdit = () => {
     setEditingDepartment(null);
     setEditedName('');
   };
 
-  const handleCancelEdit = () => {
-    setEditingDepartment(null);
-    setEditedName('');
+  const handleSaveEdit = async () => {
+    if (!editedName.trim()) return;
+
+    try {
+      await api.put(`/departments/${editingDepartment}`, {
+        name: editedName,
+      });
+
+      fetchDepartments(); // Refresh list
+      setEditingDepartment(null);
+      setEditedName('');
+    } catch (err) {
+      console.error('❌ Error saving edit:', err.response?.data || err.message);
+      alert('Failed to update. Please check the backend logs.');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/departments/${departmentToDelete}`);
+      setShowConfirm(false);
+      setDepartmentToDelete(null);
+      fetchDepartments(); // Refresh list
+    } catch (err) {
+      console.error('❌ Error deleting department:', err.response?.data || err.message);
+      alert('Failed to delete. Please check if the ID exists or if backend allows DELETE.');
+    }
   };
 
   return (
@@ -73,55 +108,59 @@ const DepartmentPage = () => {
             <h5 className="mb-0">Existing Departments</h5>
           </Card.Header>
           <Card.Body>
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Department Name</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departments.map((dept, index) => (
-                  <tr key={dept.id}>
-                    <td>{index + 1}</td>
-                    <td>
-                      {editingDepartment === dept.id ? (
-                        <Form.Control
-                          type="text"
-                          value={editedName}
-                          onChange={(e) => setEditedName(e.target.value)}
-                        />
-                      ) : (
-                        dept.name
-                      )}
-                    </td>
-                    <td className="d-flex gap-2">
-                      {editingDepartment === dept.id ? (
-                        <>
-                          <Button variant="success" size="sm" onClick={handleSaveEdit}>Save</Button>
-                          <Button variant="secondary" size="sm" onClick={handleCancelEdit}>Cancel</Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button variant="warning" size="sm" onClick={() => handleEditClick(dept)}>Edit</Button>
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={() => {
-                              setDepartmentToDelete(dept.id);
-                              setShowConfirm(true);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </>
-                      )}
-                    </td>
+            {loading ? (
+              <p>Loading...</p>
+            ) : (
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Department Name</th>
+                    <th>Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </Table>
+                </thead>
+                <tbody>
+                  {departments.map((dept, index) => (
+                    <tr key={dept.id}>
+                      <td>{index + 1}</td>
+                      <td>
+                        {editingDepartment === dept.id ? (
+                          <Form.Control
+                            type="text"
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                          />
+                        ) : (
+                          dept.name
+                        )}
+                      </td>
+                      <td className="d-flex gap-2">
+                        {editingDepartment === dept.id ? (
+                          <>
+                            <Button variant="success" size="sm" onClick={handleSaveEdit}>Save</Button>
+                            <Button variant="secondary" size="sm" onClick={handleCancelEdit}>Cancel</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="warning" size="sm" onClick={() => handleEditClick(dept)}>Edit</Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => {
+                                setDepartmentToDelete(dept.id);
+                                setShowConfirm(true);
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            )}
           </Card.Body>
         </Card>
 
@@ -133,7 +172,7 @@ const DepartmentPage = () => {
           <Modal.Body>Are you sure you want to delete this department?</Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowConfirm(false)}>Cancel</Button>
-            <Button variant="danger" onClick={handleConfirmDelete}>Delete</Button>
+            <Button variant="danger" onClick={handleDelete}>Delete</Button>
           </Modal.Footer>
         </Modal>
       </Container>

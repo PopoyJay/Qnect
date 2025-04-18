@@ -1,7 +1,17 @@
 module.exports = (sequelize, DataTypes) => {
-  const Department = sequelize.define("Department", {
-    name: { type: DataTypes.STRING, allowNull: false, unique: true },
-  });
+  const Department = sequelize.define(
+    "Department",
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+    },
+    {
+      timestamps: true,
+    }
+  );
 
   Department.associate = (models) => {
     Department.hasMany(models.Ticket, { foreignKey: "departmentId" });
