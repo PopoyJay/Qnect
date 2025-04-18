@@ -199,6 +199,75 @@ app.delete('/api/departments/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// ✅ Category CRUD Routes
+const { Category } = models;
+
+// ➕ Create Category
+app.post('/api/categories', authenticateToken, async (req, res) => {
+  const { name } = req.body;
+  try {
+    const newCategory = await Category.create({ name });
+    res.status(201).json({ message: 'Category created', category: newCategory });
+  } catch (err) {
+    console.error('❌ Error creating category:', err.message);
+    res.status(500).json({ message: 'Server error creating category' });
+  }
+});
+
+// 📄 Read All Categories
+app.get('/api/categories', authenticateToken, async (req, res) => {
+  try {
+    const categories = await Category.findAll();
+    res.status(200).json(categories);
+  } catch (err) {
+    console.error('❌ Error fetching categories:', err.message);
+    res.status(500).json({ message: 'Server error fetching categories' });
+  }
+});
+
+// 📄 Read Category by ID
+app.get('/api/categories/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const category = await Category.findByPk(id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    res.status(200).json(category);
+  } catch (err) {
+    console.error('❌ Error fetching category:', err.message);
+    res.status(500).json({ message: 'Server error fetching category' });
+  }
+});
+
+// ✏️ Update Category
+app.put('/api/categories/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  try {
+    const category = await Category.findByPk(id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    category.name = name;
+    await category.save();
+    res.status(200).json({ message: 'Category updated', category });
+  } catch (err) {
+    console.error('❌ Error updating category:', err.message);
+    res.status(500).json({ message: 'Server error updating category' });
+  }
+});
+
+// ❌ Delete Category
+app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const category = await Category.findByPk(id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    await category.destroy();
+    res.status(200).json({ message: 'Category deleted' });
+  } catch (err) {
+    console.error('❌ Error deleting category:', err.message);
+    res.status(500).json({ message: 'Server error deleting category' });
+  }
+});
+
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
