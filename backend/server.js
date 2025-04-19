@@ -130,6 +130,60 @@ app.get('/api/protected', authenticateToken, (req, res) => {
   res.json({ message: '✅ You accessed a protected route!', user: req.user });
 });
 
+// ✅ User CRUD Routes
+const { User } = models;
+
+app.get('/api/users', authenticateToken, async (req, res) => {
+  try {
+    const users = await User.findAll();
+    res.status(200).json(users);
+  } catch (err) {
+    console.error('❌ Error fetching users:', err.message);
+    res.status(500).json({ message: 'Server error fetching users' });
+  }
+});
+
+app.get('/api/users/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.status(200).json(user);
+  } catch (err) {
+    console.error('❌ Error fetching user:', err.message);
+    res.status(500).json({ message: 'Server error fetching user' });
+  }
+});
+
+app.put('/api/users/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { email, role } = req.body;
+  try {
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.email = email || user.email;
+    user.role = role || user.role;
+    await user.save();
+    res.status(200).json({ message: 'User updated', user });
+  } catch (err) {
+    console.error('❌ Error updating user:', err.message);
+    res.status(500).json({ message: 'Server error updating user' });
+  }
+});
+
+app.delete('/api/users/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findByPk(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    await user.destroy();
+    res.status(200).json({ message: 'User deleted' });
+  } catch (err) {
+    console.error('❌ Error deleting user:', err.message);
+    res.status(500).json({ message: 'Server error deleting user' });
+  }
+});
+
 // ✅ Department CRUD Routes
 const { Department } = models;
 

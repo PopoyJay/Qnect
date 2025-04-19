@@ -1,64 +1,74 @@
-import React, { useState } from 'react';
+// src/pages/UserManagementPage.jsx
+
+import React, { useEffect, useState } from 'react';
 import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Form,
-  Button,
-  Table,
-  Modal,
+  Container, Row, Col, Card, Form, Button, Table, Modal,
 } from 'react-bootstrap';
 import Sidebar from '../components/Sidebar';
+import api from '../services/api';
 
 const UserManagementPage = () => {
-  const [users, setUsers] = useState([
-    { username: 'jayadmin', email: 'jay@example.com', role: 'Admin' },
-    { username: 'ivyuser', email: 'ivy@example.com', role: 'User' },
-  ]);
-
-  const [newUser, setNewUser] = useState({
-    username: '',
-    email: '',
-    role: 'Admin',
-  });
-
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({ username: '', email: '', role: 'Admin' });
+  const [editUser, setEditUser] = useState({ username: '', email: '', role: 'Admin' });
   const [showModal, setShowModal] = useState(false);
-  const [currentUserIndex, setCurrentUserIndex] = useState(null);
-  const [editUser, setEditUser] = useState({
-    username: '',
-    email: '',
-    role: '',
-  });
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddUser = (e) => {
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('/users');
+      setUsers(response.data);
+    } catch (err) {
+      console.error('❌ Error fetching users:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleAddUser = async (e) => {
     e.preventDefault();
-    if (newUser.username && newUser.email) {
-      setUsers([...users, newUser]);
+    if (!newUser.username || !newUser.email) return;
+
+    try {
+      await api.post('/users', newUser);
       setNewUser({ username: '', email: '', role: 'Admin' });
+      fetchUsers();
+    } catch (err) {
+      console.error('❌ Error adding user:', err);
     }
   };
 
-  const handleDeleteUser = (index) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this user?");
-    if (confirmDelete) {
-      const updatedUsers = [...users];
-      updatedUsers.splice(index, 1);
-      setUsers(updatedUsers);
+  const handleDeleteUser = async (id) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this user?');
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/users/${id}`);
+      fetchUsers();
+    } catch (err) {
+      console.error('❌ Error deleting user:', err);
     }
   };
 
-  const handleEditClick = (index) => {
-    setCurrentUserIndex(index);
-    setEditUser(users[index]);
+  const handleEditClick = (user) => {
+    setCurrentUserId(user.id);
+    setEditUser({ username: user.username, email: user.email, role: user.role });
     setShowModal(true);
   };
 
-  const handleSaveEdit = () => {
-    const updatedUsers = [...users];
-    updatedUsers[currentUserIndex] = editUser;
-    setUsers(updatedUsers);
-    setShowModal(false);
+  const handleSaveEdit = async () => {
+    try {
+      await api.put(`/users/${currentUserId}`, editUser);
+      setShowModal(false);
+      fetchUsers();
+    } catch (err) {
+      console.error('❌ Error updating user:', err);
+    }
   };
 
   return (
@@ -79,99 +89,90 @@ const UserManagementPage = () => {
                       <Form.Label>Username</Form.Label>
                       <Form.Control
                         type="text"
-                        placeholder="Enter username"
                         value={newUser.username}
-                        onChange={(e) =>
-                          setNewUser({ ...newUser, username: e.target.value })
-                        }
+                        onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                         required
                       />
                     </Form.Group>
                   </Col>
-
                   <Col md={4}>
                     <Form.Group controlId="email">
-                      <Form.Label>Email Address</Form.Label>
+                      <Form.Label>Email</Form.Label>
                       <Form.Control
                         type="email"
-                        placeholder="Enter email"
                         value={newUser.email}
-                        onChange={(e) =>
-                          setNewUser({ ...newUser, email: e.target.value })
-                        }
+                        onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                         required
                       />
                     </Form.Group>
                   </Col>
-
                   <Col md={2}>
                     <Form.Group controlId="role">
                       <Form.Label>Role</Form.Label>
                       <Form.Select
                         value={newUser.role}
-                        onChange={(e) =>
-                          setNewUser({ ...newUser, role: e.target.value })
-                        }
+                        onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                       >
                         <option value="Admin">Admin</option>
                         <option value="User">User</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
-
                   <Col md={2}>
-                    <Button variant="primary" type="submit" className="w-100">
-                      Add
-                    </Button>
+                    <Button type="submit" className="w-100" variant="primary">Add</Button>
                   </Col>
                 </Row>
               </Form>
             </Card.Body>
           </Card>
 
-          {/* User List Table */}
+          {/* User Table */}
           <Card>
             <Card.Header><strong>User List</strong></Card.Header>
             <Card.Body>
-              <Table striped bordered hover responsive>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{user.username}</td>
-                      <td>{user.email}</td>
-                      <td>{user.role}</td>
-                      <td>
-                        <Button
-                          className="btn btn-warning btn-sm me-2"
-                          onClick={() => handleEditClick(index)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDeleteUser(index)}
-                        >
-                          Delete
-                        </Button>
-                      </td>
+              {loading ? (
+                <p>Loading...</p>
+              ) : (
+                <Table striped bordered hover responsive>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody>
+                    {users.map((user, index) => (
+                      <tr key={user.id}>
+                        <td>{index + 1}</td>
+                        <td>{user.username}</td>
+                        <td>{user.email}</td>
+                        <td>{user.role}</td>
+                        <td>
+                          <Button
+                            className="btn btn-warning btn-sm me-2"
+                            onClick={() => handleEditClick(user)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
             </Card.Body>
           </Card>
 
-          {/* Edit Modal */}
+          {/* Edit User Modal */}
           <Modal show={showModal} onHide={() => setShowModal(false)}>
             <Modal.Header closeButton>
               <Modal.Title>Edit User</Modal.Title>
@@ -188,7 +189,6 @@ const UserManagementPage = () => {
                     }
                   />
                 </Form.Group>
-
                 <Form.Group className="mb-3">
                   <Form.Label>Email</Form.Label>
                   <Form.Control
@@ -199,7 +199,6 @@ const UserManagementPage = () => {
                     }
                   />
                 </Form.Group>
-
                 <Form.Group>
                   <Form.Label>Role</Form.Label>
                   <Form.Select

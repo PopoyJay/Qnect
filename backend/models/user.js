@@ -9,8 +9,12 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: "user",
       validate: {
-        inIn: [['admin', 'support', 'agent']],
-      } },
+        isIn: [['admin', 'support', 'agent']], // 🛠️ fixed typo from "inIn" to "isIn"
+      },
+    },
+  }, {
+    tableName: 'users',         // ✅ tell Sequelize the exact table name
+    freezeTableName: true       // ✅ prevent Sequelize from pluralizing it
   });
 
   User.associate = function(models) {
