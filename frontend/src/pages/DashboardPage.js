@@ -14,13 +14,29 @@ const DashboardPage = () => {
   });
 
   useEffect(() => {
-    // Replace this with API call later
-    setStats({
-      total: 80,
-      open: 35,
-      resolved: 25,
-      closed: 20,
-    });
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/dashboard/stats');
+        const data = await response.json();
+        setStats({
+          total: data.total,
+          open: data.open,
+          resolved: data.resolved,
+          closed: data.closed,
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      }
+    };
+
+    // Fetch stats immediately on mount
+    fetchStats();
+
+    // Set interval to fetch data every 10 seconds
+    const interval = setInterval(fetchStats, 10000);
+
+    // Cleanup interval when component unmounts
+    return () => clearInterval(interval);
   }, []);
 
   const chartData = {
