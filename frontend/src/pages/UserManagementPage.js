@@ -5,13 +5,22 @@ import {
 import Sidebar from '../components/Sidebar';
 import api from '../services/api';
 
+// Empty user template
+const emptyUser = Object.freeze({
+  username: '',
+  email: '',
+  role: '',
+  password: '',
+});
+
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState({ username: '', email: '', role: 'Admin' });
-  const [editUser, setEditUser] = useState({ username: '', email: '', role: 'Admin' });
+  const [newUser, setNewUser] = useState({ ...emptyUser });
+  const [editUser, setEditUser] = useState({ ...emptyUser });
   const [showModal, setShowModal] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -26,15 +35,17 @@ const UserManagementPage = () => {
 
   useEffect(() => {
     fetchUsers();
+    setNewUser({ ...emptyUser }); // reset on load
   }, []);
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newUser.username || !newUser.email) return;
+    if (!newUser.username || !newUser.email || !newUser.password) return;
 
     try {
       await api.post('/users', newUser);
-      setNewUser({ username: '', email: '', role: 'Admin' });
+      setNewUser({ ...emptyUser });
+      setShowPassword(false);
       fetchUsers();
     } catch (err) {
       console.error('❌ Error adding user:', err);
@@ -55,7 +66,7 @@ const UserManagementPage = () => {
 
   const handleEditClick = (user) => {
     setCurrentUserId(user.id);
-    setEditUser({ username: user.username, email: user.email, role: user.role });
+    setEditUser({ username: user.username, email: user.email, role: user.role, password: '' });
     setShowModal(true);
   };
 
@@ -81,8 +92,8 @@ const UserManagementPage = () => {
             <Card.Header><strong>Add User</strong></Card.Header>
             <Card.Body>
               <Form onSubmit={handleAddUser}>
-                <Row className="align-items-end">
-                  <Col md={4}>
+                <Row className="align-items-end g-3">
+                  <Col md={3}>
                     <Form.Group controlId="username">
                       <Form.Label>Username</Form.Label>
                       <Form.Control
@@ -93,7 +104,7 @@ const UserManagementPage = () => {
                       />
                     </Form.Group>
                   </Col>
-                  <Col md={4}>
+                  <Col md={3}>
                     <Form.Group controlId="email">
                       <Form.Label>Email</Form.Label>
                       <Form.Control
@@ -104,20 +115,42 @@ const UserManagementPage = () => {
                       />
                     </Form.Group>
                   </Col>
+                  <Col md={3}>
+                    <Form.Group controlId="password">
+                      <Form.Label>Password</Form.Label>
+                      <div className="d-flex">
+                        <Form.Control
+                          type={showPassword ? 'text' : 'password'}
+                          value={newUser.password}
+                          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                          required
+                        />
+                        <Button
+                          variant="outline-secondary"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="ms-2"
+                        >
+                          {showPassword ? 'Hide' : 'Show'}
+                        </Button>
+                      </div>
+                    </Form.Group>
+                  </Col>
                   <Col md={2}>
                     <Form.Group controlId="role">
                       <Form.Label>Role</Form.Label>
                       <Form.Select
                         value={newUser.role}
                         onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                        required
                       >
+                        <option value="">Select Role</option>
                         <option value="Admin">Admin</option>
                         <option value="Support">Support</option>
                         <option value="Agent">Agent</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
-                  <Col md={2}>
+                  <Col md={1}>
                     <Button type="submit" className="w-100" variant="primary">Add</Button>
                   </Col>
                 </Row>
@@ -198,7 +231,7 @@ const UserManagementPage = () => {
                     }
                   />
                 </Form.Group>
-                <Form.Group>
+                <Form.Group className="mb-3">
                   <Form.Label>Role</Form.Label>
                   <Form.Select
                     value={editUser.role}
