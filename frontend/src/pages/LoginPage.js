@@ -6,10 +6,7 @@ import '../styles/LoginPage.css';
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [username, setUsername] = useState(''); // ✅ Added username state
-  const [role, setRole] = useState('user');
   const [error, setError] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = (e) => {
@@ -31,38 +28,12 @@ const LoginPage = () => {
         setLoading(false);
       })
       .catch((err) => {
-        if (err.response) {
-          if (err.response.status === 400) {
-            const message = err.response.data.message || 'Invalid credentials';
-            setError(message);
-          } else {
-            setError('Server error during login.');
-          }
+        if (err.response?.status === 400) {
+          const message = err.response.data.message || 'Invalid credentials';
+          setError(message);
         } else {
-          setError('Network error, please try again.');
+          setError('Server or network error during login.');
         }
-        setLoading(false);
-      });
-  };
-
-  const handleRegister = (e) => {
-    e.preventDefault();
-    if (!email || !password || !username) {
-      setError('Please fill out all required fields.');
-      return;
-    }
-
-    setLoading(true);
-    api.post('/register', { email, password, username, role }) // ✅ Sent username
-      .then(() => {
-        setError('');
-        alert('Registration successful!');
-        setIsRegistering(false);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError('Server error during registration.');
         setLoading(false);
       });
   };
@@ -71,10 +42,10 @@ const LoginPage = () => {
     <Container className="d-flex justify-content-center align-items-center min-vh-100">
       <Card className="p-4 shadow-sm login-card">
         <Card.Body>
-          <h3 className="text-center mb-4">{isRegistering ? '📋 Qnect Register' : '🔐 Qnect Login'}</h3>
+          <h3 className="text-center mb-4">🔐 Qnect Login</h3>
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Form onSubmit={isRegistering ? handleRegister : handleLogin}>
+          <Form onSubmit={handleLogin}>
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
@@ -97,56 +68,10 @@ const LoginPage = () => {
               />
             </Form.Group>
 
-            {/* ✅ Show username field only when registering */}
-            {isRegistering && (
-              <>
-                <Form.Group className="mb-3">
-                  <Form.Label>Username</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
-                    required
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Role</Form.Label>
-                  <Form.Control
-                    as="select"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </Form.Control>
-                </Form.Group>
-              </>
-            )}
-
             <Button variant="primary" type="submit" className="w-100" disabled={loading}>
-              {loading ? <Spinner animation="border" size="sm" /> : isRegistering ? 'Register' : 'Login'}
+              {loading ? <Spinner animation="border" size="sm" /> : 'Login'}
             </Button>
           </Form>
-
-          <div className="mt-3 text-center">
-            {isRegistering ? (
-              <p>
-                Already have an account?{' '}
-                <Button variant="link" onClick={() => setIsRegistering(false)}>
-                  Login here
-                </Button>
-              </p>
-            ) : (
-              <p>
-                Don’t have an account?{' '}
-                <Button variant="link" onClick={() => setIsRegistering(true)}>
-                  Register here
-                </Button>
-              </p>
-            )}
-          </div>
         </Card.Body>
       </Card>
     </Container>
