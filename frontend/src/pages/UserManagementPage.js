@@ -1,5 +1,3 @@
-// src/pages/UserManagementPage.jsx
-
 import React, { useEffect, useState } from 'react';
 import {
   Container, Row, Col, Card, Form, Button, Table, Modal,
@@ -114,7 +112,8 @@ const UserManagementPage = () => {
                         onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                       >
                         <option value="Admin">Admin</option>
-                        <option value="User">User</option>
+                        <option value="Support">Support</option>
+                        <option value="Agent">Agent</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -208,7 +207,8 @@ const UserManagementPage = () => {
                     }
                   >
                     <option value="Admin">Admin</option>
-                    <option value="User">User</option>
+                    <option value="Support">Support</option>
+                    <option value="Agent">Agent</option>
                   </Form.Select>
                 </Form.Group>
               </Form>
