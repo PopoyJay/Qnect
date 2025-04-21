@@ -70,14 +70,23 @@ const UserManagementPage = () => {
     setShowModal(true);
   };
 
-  const handleSaveEdit = async () => {
+  const saveUser = async (id, userData) => {
     try {
-      await api.put(`/users/${currentUserId}`, editUser);
-      setShowModal(false);
-      fetchUsers();
+      const res = await api.put(`/users/${id}`, userData);
+      if (res.status === 200) {
+        alert('User updated!');
+        setShowModal(false);
+        fetchUsers();
+      } else {
+        alert('Failed to update user.');
+      }
     } catch (err) {
-      console.error('❌ Error updating user:', err);
+      console.error('❌ Error saving user:', err);
     }
+  };
+
+  const handleSaveEdit = () => {
+    saveUser(currentUserId, editUser); // Call the saveUser function
   };
 
   return (

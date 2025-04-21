@@ -211,19 +211,42 @@ app.get('/api/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', authenticateToken, async (req, res) => {
+app.put('/api/user/:id', async (req, res) => {
   const { id } = req.params;
-  const { email, role } = req.body;
+  const { email, username, role } = req.body;
+
   try {
     const user = await User.findByPk(id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Optionally validate role
+    const allowedRoles = ['support', 'agent'];
+    if (role && !allowedRoles.includes(role.toLowerCase())) {
+      return res.status(400).json({ message: `Invalid role.` });
+    }
+
+    // Update fields
     user.email = email || user.email;
-    user.role = role || user.role;
+    user.username = username || user.username;
+    user.role = role ? role.toLowerCase() : user.role;
+
     await user.save();
-    res.status(200).json({ message: 'User updated', user });
+
+    res.json({
+      message: 'User updated successfully.',
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
   } catch (err) {
-    console.error('❌ Error updating user:', err.message);
-    res.status(500).json({ message: 'Server error updating user' });
+    console.error('❌ Update user error:', err);
+    res.status(500).json({ message: 'Server error updating user.' });
   }
 });
 
