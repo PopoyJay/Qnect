@@ -56,28 +56,58 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ✅ Register Route
+// ✅ Register Route (PostgreSQL + Validation)
 app.post('/api/register', async (req, res) => {
-  const { email, password, role = 'user' } = req.body;
+  const { email, password, username, role } = req.body;
+
+  // Validate required fields
+  if (!email || !password || !username || !role) {
+    return res.status(400).json({
+      message: 'All fields (email, password, username, role) are required'
+    });
+  }
+
+  // Validate allowed roles
+  const allowedRoles = ['support', 'agent'];
+  if (!allowedRoles.includes(role.toLowerCase())) {
+    return res.status(400).json({
+      message: `Invalid role. Allowed roles: ${allowedRoles.join(', ')}`
+    });
+  }
 
   try {
-    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    // Check if user already exists
+    const existingUser = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Insert the new user
     const result = await pool.query(
-      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
-      [email, hashedPassword, role]
+      `INSERT INTO users (email, username, password, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, email, username, role`,
+      [email, username, hashedPassword, role.toLowerCase()]
     );
 
-    res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: result.rows[0]
+    });
+
   } catch (err) {
     console.error('❌ Registration error details:', err.message);
-    res.status(500).json({ message: 'Server error during registration', error: err.message });
+    res.status(500).json({
+      message: 'Server error during registration',
+      error: err.message
+    });
   }
 });
 

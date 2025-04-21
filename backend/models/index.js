@@ -4,48 +4,45 @@ const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
 const process = require('process');
-require('dotenv').config(); // <-- Load environment variables at the start
+require('dotenv').config(); // Load environment variables
 
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.json')[env];
+
 const db = {};
 
 let sequelize;
 
-// Check if we're using an environment variable for the database connection
+// Setup sequelize instance
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
   sequelize = new Sequelize(config.database, config.username, config.password, config);
 }
 
-// Load all models dynamically from the current directory
-fs
-  .readdirSync(__dirname)
-  .filter(file => {
-    return (
-      file.indexOf('.') !== 0 &&
-      file !== basename &&
-      file.slice(-3) === '.js' &&
-      file.indexOf('.test.js') === -1
-    );
-  })
+// Dynamically import all models in this folder
+fs.readdirSync(__dirname)
+  .filter(file =>
+    file.indexOf('.') !== 0 &&
+    file !== basename &&
+    file.slice(-3) === '.js' &&
+    file.indexOf('.test.js') === -1
+  )
   .forEach(file => {
     const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
     db[model.name] = model;
   });
 
-// Handle associations if any models have them
+// Run associate() if models define it
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
 
-// Attach sequelize instance and Sequelize class to the exported db object
+// Attach sequelize instance and class
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 module.exports = db;
-
