@@ -163,6 +163,32 @@ app.get('/api/protected', authenticateToken, (req, res) => {
 // ✅ User CRUD Routes
 const { User } = models;
 
+app.post('/api/users', authenticateToken, async (req, res) => {
+  const { email, password, username, role } = req.body;
+
+  if (!email || !password || !username || !role) {
+    return res.status(400).json({ message: 'All fields (email, password, username, role) are required' });
+  }
+
+  try {
+    const existing = await User.findOne({ where: { email } });
+    if (existing) return res.status(400).json({ message: 'User already exists' });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      email,
+      username,
+      password: hashedPassword,
+      role: role.toLowerCase()
+    });
+
+    res.status(201).json({ message: 'User created successfully', user });
+  } catch (err) {
+    console.error('❌ Error creating user:', err.message);
+    res.status(500).json({ message: 'Server error creating user' });
+  }
+});
+
 app.get('/api/users', authenticateToken, async (req, res) => {
   try {
     const users = await User.findAll();
@@ -339,6 +365,94 @@ app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('❌ Error deleting category:', err.message);
     res.status(500).json({ message: 'Server error deleting category' });
+  }
+});
+
+// Create a ticket with new fields
+app.post('/api/tickets', authenticateToken, async (req, res) => {
+  const { title, description, status, priority, departmentId, categoryId, assignedTo, attachment } = req.body;
+
+  try {
+    const newTicket = await models.Ticket.create({
+      title,
+      description,
+      status,
+      priority,
+      departmentId,
+      categoryId,
+      assignedTo,
+      attachment,
+    });
+
+    res.status(201).json({
+      message: 'Ticket created successfully',
+      ticket: newTicket,
+    });
+  } catch (err) {
+    console.error('❌ Error creating ticket:', err.message);
+    res.status(500).json({ message: 'Server error creating ticket' });
+  }
+});
+
+// Fetch all tickets with the additional fields
+app.get('/api/tickets', authenticateToken, async (req, res) => {
+  try {
+    const tickets = await models.Ticket.findAll({
+      include: [
+        { model: models.Department },
+        { model: models.Category },
+        { model: models.User, as: 'assignedTo' },  // Assuming 'assignedTo' is a user
+      ],
+    });
+    res.status(200).json(tickets);
+  } catch (err) {
+    console.error('❌ Error fetching tickets:', err.message);
+    res.status(500).json({ message: 'Server error fetching tickets' });
+  }
+});
+
+// Fetch a single ticket by ID
+app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const ticket = await models.Ticket.findByPk(id, {
+      include: [
+        { model: models.Department },
+        { model: models.Category },
+        { model: models.User, as: 'assignedTo' },
+      ],
+    });
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    res.status(200).json(ticket);
+  } catch (err) {
+    console.error('❌ Error fetching ticket:', err.message);
+    res.status(500).json({ message: 'Server error fetching ticket' });
+  }
+});
+
+// Update a ticket with new fields
+app.put('/api/tickets/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { title, description, status, priority, departmentId, categoryId, assignedTo, attachment } = req.body;
+
+  try {
+    const ticket = await models.Ticket.findByPk(id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+
+    ticket.title = title || ticket.title;
+    ticket.description = description || ticket.description;
+    ticket.status = status || ticket.status;
+    ticket.priority = priority || ticket.priority;
+    ticket.departmentId = departmentId || ticket.departmentId;
+    ticket.categoryId = categoryId || ticket.categoryId;
+    ticket.assignedTo = assignedTo || ticket.assignedTo;
+    ticket.attachment = attachment || ticket.attachment;
+
+    await ticket.save();
+    res.status(200).json({ message: 'Ticket updated', ticket });
+  } catch (err) {
+    console.error('❌ Error updating ticket:', err.message);
+    res.status(500).json({ message: 'Server error updating ticket' });
   }
 });
 
