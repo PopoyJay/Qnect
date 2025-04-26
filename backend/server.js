@@ -201,8 +201,12 @@ app.get('/api/tickets', authenticateToken, async (req, res) => {
 app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
   try {
-    const ticket = await Ticket.findByPk(id, {
-      include: [Department, Category, User]
+    const ticket = await models.Ticket.findByPk(req.params.id, {
+      include: [
+        { model: models.Department, as: 'department' }, // ✅ REQUIRED alias
+        { model: models.Category, as: 'category' },     // ✅ REQUIRED alias
+        { model: models.User, as: 'user' },             // ✅ REQUIRED alias
+      ],
     });
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
     res.status(200).json(ticket);
@@ -519,7 +523,7 @@ app.get('/api/tickets', authenticateToken, async (req, res) => {
   try {
     const tickets = await models.Ticket.findAll({
       include: [
-        { model: models.Department },
+        { model: models.Department, as: 'department' },
         { model: models.Category },
         { model: models.User, as: 'assignedTo' },  // Assuming 'assignedTo' is a user
       ],
@@ -537,9 +541,9 @@ app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
   try {
     const ticket = await models.Ticket.findByPk(id, {
       include: [
-        { model: models.Department },
-        { model: models.Category },
-        { model: models.User, as: 'assignedTo' },
+        { model: models.Department, as: 'department' },
+        { model: models.Category, as: 'category' },
+        { model: models.User, as: 'user' },
       ],
     });
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });

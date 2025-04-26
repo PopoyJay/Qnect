@@ -21,32 +21,47 @@ const TicketsPage = () => {
   }, []); // Empty dependency array makes it run once when component mounts
 
   // Handle ticket creation form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const ticketData = {
-      subject,
-      department,
-      priority,
-      status,
-      agent, // Use 'agent' state here
-      category,
-      description,
-      attachment,
-    };
-
-    // Log the ticket data for testing (you can replace this with API call to create a ticket)
-    console.log(ticketData);
-
-    // Reset form fields after submission
-    setSubject('');
-    setDepartment('');
-    setPriority('');
-    setStatus('');
-    setAgent(''); // Reset the 'agent' field
-    setCategory('');
-    setDescription('');
-    setAttachment(null);
-  };
+  
+    const formData = new FormData();
+    formData.append('subject', subject);
+    formData.append('department', department);
+    formData.append('priority', priority);
+    formData.append('status', status);
+    formData.append('agent', agent);
+    formData.append('category', category);
+    formData.append('description', description);
+    if (attachment) {
+      formData.append('attachment', attachment);
+    }
+  
+    try {
+      const response = await fetch('http://localhost:5000/api/tickets', {
+        method: 'POST',
+        body: formData,
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create ticket');
+      }
+  
+      const newTicket = await response.json();
+      setTickets((prevTickets) => [...prevTickets, newTicket]);
+  
+      // Clear form fields
+      setSubject('');
+      setDepartment('');
+      setPriority('');
+      setStatus('');
+      setAgent('');
+      setCategory('');
+      setDescription('');
+      setAttachment(null);
+    } catch (error) {
+      console.error('Error submitting ticket:', error);
+    }
+  };  
 
   return (
     <div className="ticket-form-container">

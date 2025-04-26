@@ -20,6 +20,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
+    priority: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'Medium', // or any default you want
+    },
     categoryId: {
       type: DataTypes.INTEGER,
       references: {
