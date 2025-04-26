@@ -10,7 +10,6 @@ const TicketsPage = () => {
   const [agent, setAgent] = useState(''); // Use 'agent' instead of 'assignedTo'
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  const [attachment, setAttachment] = useState(null);
 
   // Fetch tickets when the component mounts
   useEffect(() => {
@@ -24,32 +23,36 @@ const TicketsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
-    const formData = new FormData();
-    formData.append('subject', subject);
-    formData.append('department', department);
-    formData.append('priority', priority);
-    formData.append('status', status);
-    formData.append('agent', agent);
-    formData.append('category', category);
-    formData.append('description', description);
-    if (attachment) {
-      formData.append('attachment', attachment);
-    }
+    const ticketData = {
+      subject,
+      department,
+      priority,
+      status,
+      agent,
+      category,
+      description,
+    };
   
     try {
       const response = await fetch('http://localhost:5000/api/tickets', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',  // because we're sending JSON
+        },
+        body: JSON.stringify(ticketData),
       });
   
       if (!response.ok) {
         throw new Error('Failed to create ticket');
       }
   
-      const newTicket = await response.json();
-      setTickets((prevTickets) => [...prevTickets, newTicket]);
+      const createdTicket = await response.json();
+      console.log('Ticket created:', createdTicket);
   
-      // Clear form fields
+      // Optionally, update the tickets list without refreshing
+      setTickets(prev => [...prev, createdTicket]);
+  
+      // Reset form fields
       setSubject('');
       setDepartment('');
       setPriority('');
@@ -57,12 +60,11 @@ const TicketsPage = () => {
       setAgent('');
       setCategory('');
       setDescription('');
-      setAttachment(null);
     } catch (error) {
       console.error('Error submitting ticket:', error);
     }
-  };  
-
+  };
+  
   return (
     <div className="ticket-form-container">
       <h2>Create Ticket</h2>
@@ -152,16 +154,7 @@ const TicketsPage = () => {
                 required
               />
             </div>
-
-            <div className="form-group">
-              <label htmlFor="attachment">Attachment</label>
-              <input
-                type="file"
-                id="attachment"
-                onChange={(e) => setAttachment(e.target.files[0])}
-              />
-            </div>
-
+            
             {/* Newly Added Assigned To Field */}
             <div className="form-group">
               <label htmlFor="agent">Agent</label>
