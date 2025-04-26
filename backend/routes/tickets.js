@@ -4,6 +4,7 @@ const { Ticket, Category, Department } = require('../models');
 
 // CREATE
 router.post('/', async (req, res) => {
+  console.log(req.body);  // This will log the request payload
   const { subject, description, status = 'Open', agent, categoryId, departmentId, userId } = req.body;
 
   if (!subject || !description || !agent || !userId) {

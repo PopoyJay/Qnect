@@ -11,60 +11,45 @@ const TicketsPage = () => {
   const [agent, setAgent] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
-  
-  // New states for dynamic dropdowns
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);  // Loading state for tickets
+  const [loading, setLoading] = useState(true);
+  const [editingTicketId, setEditingTicketId] = useState(null);
 
-  // Retrieve token from localStorage
-  const token = localStorage.getItem('token'); // Assuming the token is stored in localStorage
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('/api/departments', {
-          headers: { Authorization: `Bearer ${token}` }, // Pass the token here
-        });
-        setDepartments(response.data);
-      } catch (err) {
-        console.error('Failed to fetch departments:', err);
-      }
-    };
+        const [departmentsRes, categoriesRes, ticketsRes] = await Promise.all([
+          axios.get('/api/departments', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('http://localhost:5000/api/tickets', { headers: { Authorization: `Bearer ${token}` } })
+        ]);
 
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get('/api/categories', {
-          headers: { Authorization: `Bearer ${token}` }, // Pass the token here
-        });
-        setCategories(response.data);
+        setDepartments(departmentsRes.data);
+        setCategories(categoriesRes.data);
+        setTickets(ticketsRes.data || []);
       } catch (err) {
-        console.error('Failed to fetch categories:', err);
-      }
-    };
-
-    const fetchTickets = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/tickets', {
-          headers: { Authorization: `Bearer ${token}` } // Add token for authentication
-        });
-    
-        if (response.data && response.data.length > 0) {
-          setTickets(response.data); // Set the tickets data from the response
-        } else {
-          console.log("No tickets found.");
-        }
-      } catch (err) {
-        console.error('Failed to fetch tickets:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
-        setLoading(false);  // Stop loading when tickets are fetched
+        setLoading(false);
       }
     };
 
-    fetchDepartments();
-    fetchCategories();
-    fetchTickets();  // Fetch tickets on initial load
+    fetchData();
   }, [token]);
+
+  const resetForm = () => {
+    setSubject('');
+    setDepartment('');
+    setPriority('');
+    setStatus('');
+    setAgent('');
+    setCategory('');
+    setDescription('');
+    setEditingTicketId(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,46 +64,66 @@ const TicketsPage = () => {
       description,
     };
 
-    console.log('Submitting ticket data:', ticketData);
-
     try {
-      const response = await fetch('http://localhost:5000/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // Add token for POST request
-        },
-        body: JSON.stringify(ticketData),
-      });
+      if (editingTicketId) {
+        const response = await axios.put(`http://localhost:5000/api/tickets/${editingTicketId}`, ticketData, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create ticket');
+        setTickets(prev =>
+          prev.map(ticket => (ticket.id === editingTicketId ? response.data : ticket))
+        );
+      } else {
+        const response = await axios.post('http://localhost:5000/api/tickets', ticketData, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setTickets(prev => [...prev, response.data]);
       }
 
-      const createdTicket = await response.json();
-      console.log('Ticket created:', createdTicket);
-
-      setTickets(prev => [...prev, createdTicket]);
-
-      // Reset form
-      setSubject('');
-      setDepartment('');
-      setPriority('');
-      setStatus('');
-      setAgent('');
-      setCategory('');
-      setDescription('');
+      resetForm();
     } catch (error) {
       console.error('Error submitting ticket:', error);
     }
   };
 
+  const handleEdit = (ticket) => {
+    setEditingTicketId(ticket.id);
+    setSubject(ticket.subject);
+    setDepartment(ticket.department);
+    setPriority(ticket.priority);
+    setStatus(ticket.status);
+    setAgent(ticket.agent);
+    setCategory(ticket.category);
+    setDescription(ticket.description);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleDelete = async (ticketId) => {
+    if (!window.confirm('Are you sure you want to delete this ticket?')) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/tickets/${ticketId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setTickets(prev => prev.filter(ticket => ticket.id !== ticketId));
+    } catch (error) {
+      console.error('Error deleting ticket:', error);
+    }
+  };
+
   return (
     <div className="ticket-form-container">
-      <h2>Create Ticket</h2>
+      <h2>{editingTicketId ? 'Edit Ticket' : 'Create Ticket'}</h2>
       <form onSubmit={handleSubmit} className="ticket-form">
         <div className="form-columns">
-          {/* Left Column */}
           <div className="form-column">
             <div className="form-group">
               <label htmlFor="subject">Subject</label>
@@ -190,7 +195,6 @@ const TicketsPage = () => {
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="form-column">
             <div className="form-group">
               <label htmlFor="description">Description</label>
@@ -215,44 +219,76 @@ const TicketsPage = () => {
           </div>
         </div>
 
-        <button type="submit" className="submit-button">Create Ticket</button>
+        <div className="form-action-buttons">
+          <button
+            type="submit"
+            className={editingTicketId ? 'update-btn' : 'create-btn'}
+          >
+            {editingTicketId ? 'Update Ticket' : 'Create Ticket'}
+          </button>
+          {editingTicketId && (
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={resetForm}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </form>
 
       {/* Display Tickets */}
       <div className="tickets-list">
-  <h2>Existing Tickets</h2>
-  {loading ? (
-    <p>Loading tickets...</p>
-  ) : (
-    <table className="tickets-table">
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th>Status</th>
-          <th>Department</th>
-          <th>Priority</th>
-          <th>Category</th>
-          <th>Agent</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        {tickets.map(ticket => (
-          <tr key={ticket.id}>
-            <td>{ticket.subject}</td>
-            <td>{ticket.status}</td>
-            <td>{ticket.department}</td>
-            <td>{ticket.priority}</td>
-            <td>{ticket.category}</td>
-            <td>{ticket.agent}</td>
-            <td>{ticket.description}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
-
+        <h2>Existing Tickets</h2>
+        {loading ? (
+          <p>Loading tickets...</p>
+        ) : (
+          <table className="tickets-table">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Department</th>
+                <th>Priority</th>
+                <th>Category</th>
+                <th>Agent</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map(ticket => (
+                <tr key={ticket.id}>
+                  <td>{ticket.subject}</td>
+                  <td>{ticket.status}</td>
+                  <td>{ticket.department}</td>
+                  <td>{ticket.priority}</td>
+                  <td>{ticket.category}</td>
+                  <td>{ticket.agent}</td>
+                  <td>{ticket.description}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        className="edit-btn"
+                        onClick={() => handleEdit(ticket)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => handleDelete(ticket.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 };

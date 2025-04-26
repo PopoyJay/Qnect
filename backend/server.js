@@ -12,6 +12,8 @@ const { Pool } = require('pg');
 const cors = require('cors');
 const models = require('./models'); // Sequelize models
 const { Ticket } = require('./models'); // ✅ This gets the actual Sequelize model instance
+const departmentRoutes = require('./routes/department');
+const categoryRoutes = require('./routes/category');
 
 const app = express();
 
@@ -172,7 +174,7 @@ app.post('/api/tickets', authenticateToken, async (req, res) => {
       subject,
       description,
       status,
-      agent,
+      agent: agent || "Unassigned",
       priority,
       categoryId,
       departmentId,
@@ -599,6 +601,10 @@ app.get('/api/statuses', authenticateToken, (req, res) => {
 // ✅ Ticket Routes (modularized)
 const ticketRoutes = require('./routes/tickets');
 app.use('/api/tickets', authenticateToken, ticketRoutes);
+
+// Routes
+app.use('/departments', departmentRoutes);
+app.use('/categories', categoryRoutes);
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
