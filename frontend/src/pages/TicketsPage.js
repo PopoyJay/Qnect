@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import '../styles/ticket.css';
 
@@ -18,27 +18,28 @@ const TicketsPage = () => {
 
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [departmentsRes, categoriesRes, ticketsRes] = await Promise.all([
-          axios.get('/api/departments', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/tickets', { headers: { Authorization: `Bearer ${token}` } })
-        ]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [departmentsRes, categoriesRes, ticketsRes] = await Promise.all([
+        axios.get('/api/departments', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('http://localhost:5000/api/tickets', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
 
-        setDepartments(departmentsRes.data);
-        setCategories(categoriesRes.data);
-        setTickets(ticketsRes.data || []);
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+      setDepartments(departmentsRes.data);
+      setCategories(categoriesRes.data);
+      setTickets(ticketsRes.data || []);
+    } catch (err) {
+      console.error('Failed to fetch data:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [token]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const resetForm = () => {
     setSubject('');
@@ -66,28 +67,23 @@ const TicketsPage = () => {
 
     try {
       if (editingTicketId) {
-        const response = await axios.put(`http://localhost:5000/api/tickets/${editingTicketId}`, ticketData, {
+        await axios.put(`http://localhost:5000/api/tickets/${editingTicketId}`, ticketData, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setTickets(prev =>
-          prev.map(ticket => (ticket.id === editingTicketId ? response.data : ticket))
-        );
       } else {
-        const response = await axios.post('http://localhost:5000/api/tickets', ticketData, {
+        await axios.post('http://localhost:5000/api/tickets', ticketData, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setTickets(prev => [...prev, response.data]);
       }
 
       resetForm();
+      await fetchData(); // 👈 Auto-refresh tickets after save or update
     } catch (error) {
       console.error('Error submitting ticket:', error);
     }
@@ -113,7 +109,7 @@ const TicketsPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setTickets(prev => prev.filter(ticket => ticket.id !== ticketId));
+      await fetchData(); // 👈 Auto-refresh tickets after delete
     } catch (error) {
       console.error('Error deleting ticket:', error);
     }
