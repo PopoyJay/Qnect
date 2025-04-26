@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/ticket.css';
 
@@ -18,28 +18,27 @@ const TicketsPage = () => {
 
   const token = localStorage.getItem('token');
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [departmentsRes, categoriesRes, ticketsRes] = await Promise.all([
-        axios.get('/api/departments', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('http://localhost:5000/api/tickets', { headers: { Authorization: `Bearer ${token}` } })
-      ]);
-
-      setDepartments(departmentsRes.data);
-      setCategories(categoriesRes.data);
-      setTickets(ticketsRes.data || []);
-    } catch (err) {
-      console.error('Failed to fetch data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
-
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [departmentsRes, categoriesRes, ticketsRes] = await Promise.all([
+          axios.get('/api/departments', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('http://localhost:5000/api/tickets', { headers: { Authorization: `Bearer ${token}` } })
+        ]);
+
+        setDepartments(departmentsRes.data);
+        setCategories(categoriesRes.data);
+        setTickets(ticketsRes.data || []);
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
-  }, [fetchData]);
+  }, [token]);
 
   const resetForm = () => {
     setSubject('');
@@ -67,23 +66,28 @@ const TicketsPage = () => {
 
     try {
       if (editingTicketId) {
-        await axios.put(`http://localhost:5000/api/tickets/${editingTicketId}`, ticketData, {
+        const response = await axios.put(`http://localhost:5000/api/tickets/${editingTicketId}`, ticketData, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
+
+        setTickets(prev =>
+          prev.map(ticket => (ticket.id === editingTicketId ? response.data : ticket))
+        );
       } else {
-        await axios.post('http://localhost:5000/api/tickets', ticketData, {
+        const response = await axios.post('http://localhost:5000/api/tickets', ticketData, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
+
+        setTickets(prev => [...prev, response.data]);
       }
 
       resetForm();
-      await fetchData(); // 👈 Auto-refresh tickets after save or update
     } catch (error) {
       console.error('Error submitting ticket:', error);
     }
@@ -109,10 +113,23 @@ const TicketsPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      await fetchData(); // 👈 Auto-refresh tickets after delete
+      setTickets(prev => prev.filter(ticket => ticket.id !== ticketId));
     } catch (error) {
       console.error('Error deleting ticket:', error);
     }
+  };
+
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric', 
+      hour: 'numeric', 
+      minute: 'numeric', 
+      hour12: true 
+    };
+    return new Date(dateString).toLocaleString('en-US', options);
   };
 
   return (
@@ -250,6 +267,7 @@ const TicketsPage = () => {
                 <th>Category</th>
                 <th>Agent</th>
                 <th>Description</th>
+                <th>Date Created</th> {/* NEW COLUMN */}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -263,6 +281,7 @@ const TicketsPage = () => {
                   <td>{ticket.category}</td>
                   <td>{ticket.agent}</td>
                   <td>{ticket.description}</td>
+                  <td>{formatDate(ticket.createdAt)}</td> {/* FORMATTED DATE */}
                   <td>
                     <div className="action-buttons">
                       <button
