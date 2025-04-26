@@ -1,28 +1,60 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import '../styles/ticket.css';
 
 const TicketsPage = () => {
-  const [tickets, setTickets] = useState([]); // State to hold tickets from API
+  const [tickets, setTickets] = useState([]);
   const [subject, setSubject] = useState('');
   const [department, setDepartment] = useState('');
   const [priority, setPriority] = useState('');
   const [status, setStatus] = useState('');
-  const [agent, setAgent] = useState(''); // Use 'agent' instead of 'assignedTo'
+  const [agent, setAgent] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  
+  // New states for dynamic dropdowns
+  const [departments, setDepartments] = useState([]);
+  const [categories, setCategories] = useState([]);
 
-  // Fetch tickets when the component mounts
+  // Retrieve token from localStorage
+  const token = localStorage.getItem('token'); // Assuming the token is stored in localStorage
+
   useEffect(() => {
-    fetch('http://localhost:5000/api/tickets') // Ensure the backend API URL is correct
-      .then((res) => res.json())
-      .then((data) => setTickets(data))
-      .catch((err) => console.error(err));
-  }, []); // Empty dependency array makes it run once when component mounts
+    const fetchDepartments = async () => {
+      try {
+        const response = await axios.get('/api/departments', {
+          headers: { Authorization: `Bearer ${token}` }, // Pass the token here
+        });
+        setDepartments(response.data);
+      } catch (err) {
+        console.error('Failed to fetch departments:', err);
+      }
+    };
 
-  // Handle ticket creation form submission
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get('/api/categories', {
+          headers: { Authorization: `Bearer ${token}` }, // Pass the token here
+        });
+        setCategories(response.data);
+      } catch (err) {
+        console.error('Failed to fetch categories:', err);
+      }
+    };
+
+    fetchDepartments();
+    fetchCategories();
+    
+    // Fetch Tickets (no token needed for this API)
+    fetch('http://localhost:5000/api/tickets')
+      .then(res => res.json())
+      .then(data => setTickets(data))
+      .catch(err => console.error(err));
+  }, [token]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const ticketData = {
       subject,
       department,
@@ -32,27 +64,29 @@ const TicketsPage = () => {
       category,
       description,
     };
-  
+
+    console.log('Submitting ticket data:', ticketData);
+
     try {
       const response = await fetch('http://localhost:5000/api/tickets', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',  // because we're sending JSON
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Add token for POST request
         },
         body: JSON.stringify(ticketData),
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to create ticket');
       }
-  
+
       const createdTicket = await response.json();
       console.log('Ticket created:', createdTicket);
-  
-      // Optionally, update the tickets list without refreshing
+
       setTickets(prev => [...prev, createdTicket]);
-  
-      // Reset form fields
+
+      // Reset form
       setSubject('');
       setDepartment('');
       setPriority('');
@@ -64,7 +98,7 @@ const TicketsPage = () => {
       console.error('Error submitting ticket:', error);
     }
   };
-  
+
   return (
     <div className="ticket-form-container">
       <h2>Create Ticket</h2>
@@ -91,9 +125,9 @@ const TicketsPage = () => {
                 onChange={(e) => setDepartment(e.target.value)}
               >
                 <option value="">Select Department</option>
-                <option value="IT">IT</option>
-                <option value="HR">HR</option>
-                <option value="Support">Support</option>
+                {departments.map(dep => (
+                  <option key={dep.id} value={dep.name}>{dep.name}</option>
+                ))}
               </select>
             </div>
 
@@ -105,9 +139,10 @@ const TicketsPage = () => {
                 onChange={(e) => setPriority(e.target.value)}
               >
                 <option value="">Select Priority</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
+                <option value="Urgent">Urgent</option>
                 <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
               </select>
             </div>
 
@@ -120,12 +155,12 @@ const TicketsPage = () => {
               >
                 <option value="">Select Status</option>
                 <option value="Open">Open</option>
-                <option value="Resolved">Resolved</option>
+                <option value="Progress">Progress</option>
                 <option value="Closed">Closed</option>
+                <option value="On Hold">On Hold</option>
               </select>
             </div>
 
-            {/* Newly Added Category Field */}
             <div className="form-group">
               <label htmlFor="category">Category</label>
               <select
@@ -134,10 +169,9 @@ const TicketsPage = () => {
                 onChange={(e) => setCategory(e.target.value)}
               >
                 <option value="">Select Category</option>
-                <option value="Software">Software</option>
-                <option value="Hardware">Hardware</option>
-                <option value="Network">Network</option>
-                <option value="General">General</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.name}>{cat.name}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -154,15 +188,14 @@ const TicketsPage = () => {
                 required
               />
             </div>
-            
-            {/* Newly Added Assigned To Field */}
+
             <div className="form-group">
               <label htmlFor="agent">Agent</label>
               <input
                 type="text"
                 id="agent"
-                value={agent} // Use 'agent' here
-                onChange={(e) => setAgent(e.target.value)} // Use 'setAgent' here
+                value={agent}
+                onChange={(e) => setAgent(e.target.value)}
               />
             </div>
           </div>

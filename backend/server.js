@@ -15,6 +15,8 @@ const { Ticket } = require('./models'); // ✅ This gets the actual Sequelize mo
 
 const app = express();
 
+app.set('trust proxy', 1); // 1 = trust first proxy
+
 // ✅ CORS Middleware
 app.use(cors({
   origin: 'http://localhost:3000',

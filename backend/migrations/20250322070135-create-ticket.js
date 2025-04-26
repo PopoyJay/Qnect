@@ -9,7 +9,7 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      subject: { // Changed to subject from title
+      subject: {
         type: Sequelize.STRING,
         allowNull: false
       },
@@ -55,9 +55,19 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      },
+      agent: {
+        type: Sequelize.STRING,
+        allowNull: true
+      },
+      priority: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: 'Medium'
       }
     });
   },
+
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Tickets');
   }
