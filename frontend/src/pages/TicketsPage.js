@@ -15,6 +15,7 @@ const TicketsPage = () => {
   // New states for dynamic dropdowns
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);  // Loading state for tickets
 
   // Retrieve token from localStorage
   const token = localStorage.getItem('token'); // Assuming the token is stored in localStorage
@@ -42,14 +43,27 @@ const TicketsPage = () => {
       }
     };
 
+    const fetchTickets = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/tickets', {
+          headers: { Authorization: `Bearer ${token}` } // Add token for authentication
+        });
+    
+        if (response.data && response.data.length > 0) {
+          setTickets(response.data); // Set the tickets data from the response
+        } else {
+          console.log("No tickets found.");
+        }
+      } catch (err) {
+        console.error('Failed to fetch tickets:', err);
+      } finally {
+        setLoading(false);  // Stop loading when tickets are fetched
+      }
+    };
+
     fetchDepartments();
     fetchCategories();
-    
-    // Fetch Tickets (no token needed for this API)
-    fetch('http://localhost:5000/api/tickets')
-      .then(res => res.json())
-      .then(data => setTickets(data))
-      .catch(err => console.error(err));
+    fetchTickets();  // Fetch tickets on initial load
   }, [token]);
 
   const handleSubmit = async (e) => {
@@ -206,15 +220,39 @@ const TicketsPage = () => {
 
       {/* Display Tickets */}
       <div className="tickets-list">
-        <h2>Existing Tickets</h2>
-        <ul>
-          {tickets.map(ticket => (
-            <li key={ticket.id}>
-              {ticket.subject} - {ticket.status}
-            </li>
-          ))}
-        </ul>
-      </div>
+  <h2>Existing Tickets</h2>
+  {loading ? (
+    <p>Loading tickets...</p>
+  ) : (
+    <table className="tickets-table">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Department</th>
+          <th>Priority</th>
+          <th>Category</th>
+          <th>Agent</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {tickets.map(ticket => (
+          <tr key={ticket.id}>
+            <td>{ticket.subject}</td>
+            <td>{ticket.status}</td>
+            <td>{ticket.department}</td>
+            <td>{ticket.priority}</td>
+            <td>{ticket.category}</td>
+            <td>{ticket.agent}</td>
+            <td>{ticket.description}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</div>
+
     </div>
   );
 };

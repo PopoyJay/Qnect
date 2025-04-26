@@ -45,3 +45,56 @@
   border-radius: 5px;
   cursor: pointer;
 }
+/* Style the table */
+.tickets-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style table headers */
+.tickets-table th {
+  background-color: #007bff; /* Blue background */
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Style table rows */
+.tickets-table td {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+}
+
+/* Alternate row color for better readability */
+.tickets-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Hover effect for rows */
+.tickets-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Add a border around the table */
+.tickets-table {
+  border: 1px solid #ddd;
+}
+
+/* Add some spacing around the table */
+.tickets-list {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+/* Styling for the table header */
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 15px;
+}

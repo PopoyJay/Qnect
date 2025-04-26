@@ -171,6 +171,8 @@ app.post('/api/tickets', authenticateToken, async (req, res) => {
     const ticket = await Ticket.create({
       subject,
       description,
+      status,
+      agent,
       priority,
       categoryId,
       departmentId,
