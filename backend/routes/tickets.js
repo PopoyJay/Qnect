@@ -4,25 +4,26 @@ const { Ticket, Category, Department } = require('../models');
 
 // CREATE
 router.post('/', async (req, res) => {
-  const { subject, description, status = 'Open', agent, categoryId, departmentId } = req.body;
+  const { subject, description, status = 'Open', agent, categoryId, departmentId, userId } = req.body;
 
-  if (!subject || !description || !agent) {
-    return res.status(400).json({ message: 'Subject, Description, and Agent are required' });
+  if (!subject || !description || !agent || !userId) {
+    return res.status(400).json({ message: 'Subject, Description, Agent, and User are required' });
   }
 
   try {
-    // Check if category and department exist
+    // Check if category, department, and user exist
     const category = await Category.findByPk(categoryId);
     const department = await Department.findByPk(departmentId);
+    // (Optional) If you want to verify userId too, you should import User model and check it
 
     if (!category || !department) {
       return res.status(400).json({ message: 'Invalid Category or Department ID' });
     }
 
-    const ticket = await Ticket.create({ subject, description, status, agent, categoryId, departmentId });
+    const ticket = await Ticket.create({ subject, description, status, agent, categoryId, departmentId, userId });
     res.status(201).json({ message: 'Ticket created successfully', ticket });
   } catch (err) {
-    console.error(err); // Log the error for debugging
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
