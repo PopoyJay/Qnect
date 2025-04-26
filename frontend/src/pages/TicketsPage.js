@@ -1,31 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/ticket.css';
 
 const TicketsPage = () => {
+  const [tickets, setTickets] = useState([]); // State to hold tickets from API
   const [subject, setSubject] = useState('');
   const [department, setDepartment] = useState('');
   const [priority, setPriority] = useState('');
   const [status, setStatus] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [agent, setAgent] = useState(''); // Use 'agent' instead of 'assignedTo'
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [attachment, setAttachment] = useState(null);
 
+  // Fetch tickets when the component mounts
+  useEffect(() => {
+    fetch('http://localhost:5000/api/tickets') // Ensure the backend API URL is correct
+      .then((res) => res.json())
+      .then((data) => setTickets(data))
+      .catch((err) => console.error(err));
+  }, []); // Empty dependency array makes it run once when component mounts
+
+  // Handle ticket creation form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Collect ticket data
     const ticketData = {
       subject,
       department,
       priority,
       status,
-      assignedTo,
+      agent, // Use 'agent' state here
       category,
       description,
-      attachment
+      attachment,
     };
-    // Log for testing purposes
+
+    // Log the ticket data for testing (you can replace this with API call to create a ticket)
     console.log(ticketData);
+
+    // Reset form fields after submission
+    setSubject('');
+    setDepartment('');
+    setPriority('');
+    setStatus('');
+    setAgent(''); // Reset the 'agent' field
+    setCategory('');
+    setDescription('');
+    setAttachment(null);
   };
 
   return (
@@ -127,14 +147,14 @@ const TicketsPage = () => {
               />
             </div>
 
-            {/* Newly Added Assigned To Field - Now in Right Column */}
+            {/* Newly Added Assigned To Field */}
             <div className="form-group">
-              <label htmlFor="assignedTo">Assigned To</label>
+              <label htmlFor="agent">Agent</label>
               <input
                 type="text"
-                id="assignedTo"
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
+                id="agent"
+                value={agent} // Use 'agent' here
+                onChange={(e) => setAgent(e.target.value)} // Use 'setAgent' here
               />
             </div>
           </div>
@@ -142,6 +162,18 @@ const TicketsPage = () => {
 
         <button type="submit" className="submit-button">Create Ticket</button>
       </form>
+
+      {/* Display Tickets */}
+      <div className="tickets-list">
+        <h2>Existing Tickets</h2>
+        <ul>
+          {tickets.map(ticket => (
+            <li key={ticket.id}>
+              {ticket.subject} - {ticket.status}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

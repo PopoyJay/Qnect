@@ -25,11 +25,11 @@ const Sidebar = () => {
           </Link>
         </Nav.Item>
         {/* Add the Ticket Status link here */}
-        <Nav.Item>
+        {/* <Nav.Item>
           <Link to="/ticket-status" className={`nav-link ${isActive('/ticket-status')}`}>
             🗂️ Ticket Status
           </Link>
-        </Nav.Item>
+        </Nav.Item> */}
 
         {/* === ADMINISTRATION SECTION === */}
         <div className="text-uppercase fw-bold small text-secondary mt-4 mb-1 px-2">Administration</div>

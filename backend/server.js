@@ -11,6 +11,7 @@ const rateLimit = require('express-rate-limit');
 const { Pool } = require('pg');
 const cors = require('cors');
 const models = require('./models'); // Sequelize models
+const { Ticket } = require('./models'); // ✅ This gets the actual Sequelize model instance
 
 const app = express();
 
@@ -154,6 +155,102 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// ✅ Ticket CRUD with static priorities + categoryId + departmentId
+app.post('/api/tickets', authenticateToken, async (req, res) => {
+  const { subject, description, status, agent, priority, categoryId, departmentId } = req.body;
+  const allowedPriorities = ['Urgent', 'High', 'Medium', 'Low'];
+
+  if (!allowedPriorities.includes(priority)) {
+    return res.status(400).json({ message: 'Invalid priority level.' });
+  }
+
+  try {
+    const ticket = await Ticket.create({
+      subject,
+      description,
+      priority,
+      categoryId,
+      departmentId,
+      userId: req.user.userId
+    });
+    res.status(201).json({ message: 'Ticket created', ticket });
+  } catch (err) {
+    console.error('❌ Error creating ticket:', err);
+    res.status(500).json({ message: 'Server error creating ticket' });
+  }
+});
+
+app.get('/api/tickets', authenticateToken, async (req, res) => {
+  try {
+    const tickets = await Ticket.findAll({
+      include: [
+        { model: User, as: 'user' },
+        { model: Category, as: 'category' },
+        { model: Department, as: 'department' }
+      ],
+      order: [['createdAt', 'DESC']]    
+    });
+    res.status(200).json(tickets);
+  } catch (err) {
+    console.error('❌ Error fetching tickets:', err);
+    res.status(500).json({ message: 'Server error fetching tickets' });
+  }
+});
+
+app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const ticket = await Ticket.findByPk(id, {
+      include: [Department, Category, User]
+    });
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    res.status(200).json(ticket);
+  } catch (err) {
+    console.error('❌ Error fetching ticket:', err);
+    res.status(500).json({ message: 'Server error fetching ticket' });
+  }
+});
+
+app.put('/api/tickets/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  const { subject, description, priority, categoryId, departmentId } = req.body;
+  const allowedPriorities = ['Urgent', 'High', 'Medium', 'Low'];
+
+  try {
+    const ticket = await Ticket.findByPk(id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+
+    if (priority && !allowedPriorities.includes(priority)) {
+      return res.status(400).json({ message: 'Invalid priority level.' });
+    }
+
+    ticket.subject = subject || ticket.subject;
+    ticket.description = description || ticket.description;
+    ticket.priority = priority || ticket.priority;
+    ticket.categoryId = categoryId || ticket.categoryId;
+    ticket.departmentId = departmentId || ticket.departmentId;
+
+    await ticket.save();
+    res.status(200).json({ message: 'Ticket updated', ticket });
+  } catch (err) {
+    console.error('❌ Error updating ticket:', err);
+    res.status(500).json({ message: 'Server error updating ticket' });
+  }
+});
+
+app.delete('/api/tickets/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const ticket = await Ticket.findByPk(id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    await ticket.destroy();
+    res.status(200).json({ message: 'Ticket deleted' });
+  } catch (err) {
+    console.error('❌ Error deleting ticket:', err);
+    res.status(500).json({ message: 'Server error deleting ticket' });
+  }
+});
 
 // ✅ Protected test route
 app.get('/api/protected', authenticateToken, (req, res) => {
@@ -393,11 +490,11 @@ app.delete('/api/categories/:id', authenticateToken, async (req, res) => {
 
 // Create a ticket with new fields
 app.post('/api/tickets', authenticateToken, async (req, res) => {
-  const { title, description, status, priority, departmentId, categoryId, assignedTo, attachment } = req.body;
+  const { subject, description, status, priority, departmentId, categoryId, assignedTo, attachment } = req.body;
 
   try {
     const newTicket = await models.Ticket.create({
-      title,
+      subject,
       description,
       status,
       priority,
@@ -456,13 +553,13 @@ app.get('/api/tickets/:id', authenticateToken, async (req, res) => {
 // Update a ticket with new fields
 app.put('/api/tickets/:id', authenticateToken, async (req, res) => {
   const { id } = req.params;
-  const { title, description, status, priority, departmentId, categoryId, assignedTo, attachment } = req.body;
+  const { subject, description, status, priority, departmentId, categoryId, assignedTo, attachment } = req.body;
 
   try {
     const ticket = await models.Ticket.findByPk(id);
     if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
 
-    ticket.title = title || ticket.title;
+    ticket.subject = subject || ticket.subject;
     ticket.description = description || ticket.description;
     ticket.status = status || ticket.status;
     ticket.priority = priority || ticket.priority;
@@ -490,6 +587,10 @@ app.get('/api/priorities', authenticateToken, (req, res) => {
 app.get('/api/statuses', authenticateToken, (req, res) => {
   res.json(statuses);
 });
+
+// ✅ Ticket Routes (modularized)
+const ticketRoutes = require('./routes/tickets');
+app.use('/api/tickets', authenticateToken, ticketRoutes);
 
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
