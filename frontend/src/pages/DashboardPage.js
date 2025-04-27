@@ -47,7 +47,7 @@ const DashboardPage = () => {
       {
         label: 'Tickets',
         data: [stats.open, stats.inProgress, stats.onHold, stats.closed, stats.total], // Add Total to data
-        backgroundColor: ['#ff6384', '#ff9f40', '#36a2eb', '#4bc0c0', '#ffcd56'], // Adding a color for Total
+        backgroundColor: ['#ff6384', '#ff9f40', '#36a2eb', '#4bc0c0', '#8884d8'], // Adding a color for Total
       },
     ],
   };
