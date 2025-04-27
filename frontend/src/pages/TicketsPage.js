@@ -24,11 +24,11 @@ const TicketsPage = () => {
         const [departmentsRes, categoriesRes, ticketsRes] = await Promise.all([
           axios.get('/api/departments', { headers: { Authorization: `Bearer ${token}` } }),
           axios.get('/api/categories', { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get('http://localhost:5000/api/tickets', { headers: { Authorization: `Bearer ${token}` } })
+          axios.get('/api/tickets', { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
-        setDepartments(departmentsRes.data);
-        setCategories(categoriesRes.data);
+        setDepartments(departmentsRes.data || []);
+        setCategories(categoriesRes.data || []);
         setTickets(ticketsRes.data || []);
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -51,42 +51,40 @@ const TicketsPage = () => {
     setEditingTicketId(null);
   };
 
+  const fetchTickets = async () => {
+    try {
+      const ticketsRes = await axios.get('/api/tickets', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTickets(ticketsRes.data || []);
+    } catch (err) {
+      console.error('Failed to fetch tickets:', err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const ticketData = {
-      subject,
-      department,
-      priority,
-      status,
-      agent,
-      category,
-      description,
-    };
+    const ticketData = { subject, department, priority, status, agent, category, description };
 
     try {
       if (editingTicketId) {
-        const response = await axios.put(`http://localhost:5000/api/tickets/${editingTicketId}`, ticketData, {
+        await axios.put(`/api/tickets/${editingTicketId}`, ticketData, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setTickets(prev =>
-          prev.map(ticket => (ticket.id === editingTicketId ? response.data : ticket))
-        );
       } else {
-        const response = await axios.post('http://localhost:5000/api/tickets', ticketData, {
+        await axios.post('/api/tickets', ticketData, {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
         });
-
-        setTickets(prev => [...prev, response.data]);
       }
 
+      await fetchTickets();
       resetForm();
     } catch (error) {
       console.error('Error submitting ticket:', error);
@@ -109,25 +107,23 @@ const TicketsPage = () => {
     if (!window.confirm('Are you sure you want to delete this ticket?')) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/tickets/${ticketId}`, {
+      await axios.delete(`/api/tickets/${ticketId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      setTickets(prev => prev.filter(ticket => ticket.id !== ticketId));
+      await fetchTickets();
     } catch (error) {
       console.error('Error deleting ticket:', error);
     }
   };
 
-  // Helper function to format date
   const formatDate = (dateString) => {
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric', 
-      hour: 'numeric', 
-      minute: 'numeric', 
-      hour12: true 
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hour12: true,
     };
     return new Date(dateString).toLocaleString('en-US', options);
   };
@@ -157,8 +153,10 @@ const TicketsPage = () => {
                 onChange={(e) => setDepartment(e.target.value)}
               >
                 <option value="">Select Department</option>
-                {departments.map(dep => (
-                  <option key={dep.id} value={dep.name}>{dep.name}</option>
+                {departments.map((dep) => (
+                  <option key={dep.id} value={dep.name}>
+                    {dep.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -187,7 +185,7 @@ const TicketsPage = () => {
               >
                 <option value="">Select Status</option>
                 <option value="Open">Open</option>
-                <option value="Progress">Progress</option>
+                <option value="In Progress">In Progress</option>
                 <option value="Closed">Closed</option>
                 <option value="On Hold">On Hold</option>
               </select>
@@ -201,8 +199,10 @@ const TicketsPage = () => {
                 onChange={(e) => setCategory(e.target.value)}
               >
                 <option value="">Select Category</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.name}>{cat.name}</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
                 ))}
               </select>
             </div>
@@ -240,22 +240,19 @@ const TicketsPage = () => {
             {editingTicketId ? 'Update Ticket' : 'Create Ticket'}
           </button>
           {editingTicketId && (
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={resetForm}
-            >
+            <button type="button" className="cancel-btn" onClick={resetForm}>
               Cancel
             </button>
           )}
         </div>
       </form>
 
-      {/* Display Tickets */}
       <div className="tickets-list">
         <h2>Existing Tickets</h2>
         {loading ? (
           <p>Loading tickets...</p>
+        ) : tickets.length === 0 ? (
+          <p>No tickets found.</p>
         ) : (
           <table className="tickets-table">
             <thead>
@@ -267,12 +264,12 @@ const TicketsPage = () => {
                 <th>Category</th>
                 <th>Agent</th>
                 <th>Description</th>
-                <th>Date Created</th> {/* NEW COLUMN */}
+                <th>Date Created</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {tickets.map(ticket => (
+              {tickets.map((ticket) => (
                 <tr key={ticket.id}>
                   <td>{ticket.subject}</td>
                   <td>{ticket.status}</td>
@@ -281,7 +278,7 @@ const TicketsPage = () => {
                   <td>{ticket.category}</td>
                   <td>{ticket.agent}</td>
                   <td>{ticket.description}</td>
-                  <td>{formatDate(ticket.createdAt)}</td> {/* FORMATTED DATE */}
+                  <td>{formatDate(ticket.createdAt)}</td>
                   <td>
                     <div className="action-buttons">
                       <button

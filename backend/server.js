@@ -606,6 +606,29 @@ app.use('/api/tickets', authenticateToken, ticketRoutes);
 app.use('/departments', departmentRoutes);
 app.use('/categories', categoryRoutes);
 
+// ✅ Dashboard Stats Route
+app.get('/api/dashboard/stats', async (req, res) => {
+  try {
+    const total = await Ticket.count(); // Count all tickets
+
+    const open = await Ticket.count({ where: { status: 'Open' } });
+    const inProgress = await Ticket.count({ where: { status: 'In Progress' } });
+    const onHold = await Ticket.count({ where: { status: 'On Hold' } });
+    const closed = await Ticket.count({ where: { status: 'Closed' } });
+
+    res.json({
+      total,
+      open,
+      inProgress,
+      onHold,
+      closed,
+    });
+  } catch (error) {
+    console.error('❌ Error fetching stats:', error);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
 // ✅ Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

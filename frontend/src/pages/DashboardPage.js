@@ -9,7 +9,8 @@ const DashboardPage = () => {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
-    resolved: 0,
+    inProgress: 0, // New inProgress state
+    onHold: 0, // On Hold state
     closed: 0,
   });
 
@@ -21,7 +22,8 @@ const DashboardPage = () => {
         setStats({
           total: data.total,
           open: data.open,
-          resolved: data.resolved,
+          inProgress: data.inProgress, // Include inProgress
+          onHold: data.onHold, // Include On Hold
           closed: data.closed,
         });
       } catch (error) {
@@ -40,12 +42,12 @@ const DashboardPage = () => {
   }, []);
 
   const chartData = {
-    labels: ['Open', 'Resolved', 'Closed'],
+    labels: ['Open', 'In Progress', 'On Hold', 'Closed', 'Total'], // Add Total label
     datasets: [
       {
         label: 'Tickets',
-        data: [stats.open, stats.resolved, stats.closed],
-        backgroundColor: ['#ff6384', '#36a2eb', '#4bc0c0'],
+        data: [stats.open, stats.inProgress, stats.onHold, stats.closed, stats.total], // Add Total to data
+        backgroundColor: ['#ff6384', '#ff9f40', '#36a2eb', '#4bc0c0', '#ffcd56'], // Adding a color for Total
       },
     ],
   };
@@ -70,15 +72,19 @@ const DashboardPage = () => {
           <p>{stats.total}</p>
         </div>
         <div className="card open">
-          <h4>Open Tickets</h4>
+          <h4>Open</h4>
           <p>{stats.open}</p>
         </div>
-        <div className="card resolved">
-          <h4>Resolved Tickets</h4>
-          <p>{stats.resolved}</p>
+        <div className="card inProgress"> {/* Added In Progress */}
+          <h4>In Progress</h4>
+          <p>{stats.inProgress}</p> {/* Display In Progress */}
+        </div>
+        <div className="card onHold"> {/* On Hold */}
+          <h4>On Hold</h4>
+          <p>{stats.onHold}</p>
         </div>
         <div className="card closed">
-          <h4>Closed Tickets</h4>
+          <h4>Closed</h4>
           <p>{stats.closed}</p>
         </div>
       </div>
