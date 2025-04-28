@@ -1,8 +1,8 @@
 // Load environment variables from .env file
 require('dotenv').config();
 
-const fs = require('fs');
-const https = require('https');
+// const fs = require('fs');
+// const https = require('https');
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require('morgan');
@@ -64,25 +64,25 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // SSL Certificate Options for HTTPS
-const sslOptions = {
-  key: fs.readFileSync('C:/Users/Jeson Cabrera/server.key'),   // Replace with your private key
-  cert: fs.readFileSync('C:/Users/Jeson Cabrera/server.crt'),  // Replace with your certificate
+// const sslOptions = {
+  // key: fs.readFileSync('C:/Users/Jeson Cabrera/server.key'),   // Replace with your private key
+  // cert: fs.readFileSync('C:/Users/Jeson Cabrera/server.crt'),  // Replace with your certificate
   // ca: fs.readFileSync('C:/Users/Jeson Cabrera/ca.crt'),        // (Optional) If you have a CA certificate
-};
+// };
 
 // Set up HTTPS server
-https.createServer(sslOptions, app).listen(443, () => {
-  console.log("HTTPS server running on port 443");
-});
+// https.createServer(sslOptions, app).listen(443, () => {
+  // console.log("HTTPS server running on port 443");
+// });
 
 // Optional: Redirect HTTP to HTTPS
-const http = require('http');
-http.createServer((req, res) => {
-  res.writeHead(301, { "Location": `https://${req.headers.host}${req.url}` });
-  res.end();
-}).listen(80, () => {
-  console.log("Redirecting HTTP to HTTPS on port 80");
-});
+// const http = require('http');
+// http.createServer((req, res) => {
+  // res.writeHead(301, { "Location": `https://${req.headers.host}${req.url}` });
+  // res.end();
+// }).listen(80, () => {
+  // console.log("Redirecting HTTP to HTTPS on port 80");
+// });
 
 // ✅ Register Route (PostgreSQL + Validation)
 app.post('/api/register', async (req, res) => {
