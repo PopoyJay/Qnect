@@ -23,7 +23,7 @@ app.set('trust proxy', 1); // 1 = trust first proxy
 
 // ✅ CORS Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://qnect.onrender.com',
   credentials: true,
 }));
 
